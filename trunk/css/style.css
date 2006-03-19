@@ -1,0 +1,379 @@
+a img,
+a:active img,
+img {
+	vertical-align: middle;
+	border: none;
+}
+
+body {
+	font-size: 10px;
+	font-family: Verdana, Arial, Sans-Serif;
+	color: #000000;
+}
+
+body.a_menu {
+	/*background-color: #5176b5;*/
+	background-color: #fff;
+}
+
+body.a_body {
+	/*background-color: #d1dceb;*/
+	background-color: #fff;
+}
+
+.a_white_pane {
+	padding: 4px 0 4px 0;
+	background-color: #fff;
+}
+
+.a_menu_pane {
+	padding: 4px;
+	background-color: #f9ffa2;
+}
+
+.a_menu_pane_2 {
+	padding: 4px;
+	background-color: #f5cdcd;
+}
+
+.a_menu_pane_3 {
+	padding: 4px;
+	background-color: #caf2d9;
+}
+
+.a_block {
+	border: 1px solid #345487;
+	background: #fff;
+}
+
+.a_block_hdr_on {
+	font-size: 10px;
+	vertical-align: middle;
+	font-weight: bold;
+	color: #FFF;
+	padding: 6px;
+	/*background-image: url(tile_cat.gif);*/
+	background-color: #5176B5;
+}
+
+.a_block_hdr_off {
+	font-size: 10px;
+	vertical-align: middle;
+	font-weight: bold;
+	color: #FFF;
+	/*padding: 5px 0px 8px 5px;*/
+	padding: 6px;
+	/*background-image: url(menu_collapsed.gif);*/
+	background-color: #5176B5;
+}
+
+.a_block_hdr_on a:link,
+.a_block_hdr_on a:visited,
+.a_block_hdr_on a:active,
+.a_block_hdr_off a:link,
+.a_block_hdr_off a:visited,
+.a_block_hdr_off a:active {
+	text-decoration: none;
+	color: #FFF
+}
+
+.a_block_hdr_on a:hover,
+.a_block_hdr_off a:hover {
+	text-decoration: underline
+}
+
+.a_block_content {
+	font-size: 9px;
+	background-color: #EEF2F7;
+	padding: 0px 0px 0px 0px;
+	line-height: 1.7em;
+}
+
+.a_block_content a:link, 
+.a_block_content a:visited, 
+.a_block_content a:active {
+	color: #000;
+	text-decoration: none;
+}
+
+.a_menu_item_on {
+	background-color: #dfe6ef;
+	border-right: 2px solid #3860bb;
+	border-left: 2px solid #3860bb;
+}
+
+.a_menu_item_off {
+	border-left: 2px solid #eef2f7;
+	background-color: #eef2f7;
+}
+
+.a_menu_item_on a:link, 
+.a_menu_item_on a:visited, 
+.a_menu_item_on a:active {
+	border-left: 2px solid #dfe6ef;
+}
+
+.a_menu_item_off a:link, 
+.a_menu_item_off a:visited, 
+.a_menu_item_off a:active {
+	border-left: 2px solid #eef2f7;
+}
+
+h1.a_title {
+	display: block;
+	border: 1px solid #345487;
+	background-color: #5176B5;
+	padding: 4px;
+	color: #fff;
+	font-size: 12px;
+	font-weight: bold;
+	text-align: left;
+	font-style: italic;
+	vertical-align: middle;
+	margin: 0;
+}
+
+.a_form_footer {
+	background-color: #d1dceb;
+	color: #3a4f6c;
+	font-weight: bold;
+	padding: 5px;
+	vertical-align: middle;
+	text-align: center;
+}
+
+.a_pane {
+	border: 1px solid #345487;
+	background-color: #fff;
+	margin-top: 4px;
+}
+
+.a_form_pane {
+	border: 1px solid #345487;
+	background-color: #fff;
+	margin: 4px;
+	margin-bottom: 10px;
+}
+
+.a_ok_pane {
+	border: 1px solid #348754;
+	background-color: #fff;
+	margin-top: 4px;
+}
+
+.a_ok_pane_hdr {
+	background-color: #d1ebdc;
+	padding: 5px;
+	vertical-align: middle;
+	text-align: left;
+	color: #348754;
+	font-weight: bold;
+}
+
+.a_message {
+	padding: 5px;
+	font-style: italic;
+}
+
+.a_fail_pane {
+	border: 1px solid #c40000;
+	background-color: #fff;
+	margin-top: 4px;
+}
+
+.a_fail_pane_hdr {
+	background-color: #ffc9c0;
+	padding: 5px;
+	vertical-align: middle;
+	text-align: left;
+	color: #c40000;
+	font-weight: bold;
+}
+
+.a_form_pane_hdr, .a_pane_hdr {
+	background-color: #d1dceb;
+	padding: 5px;
+	vertical-align: middle;
+	text-align: left;
+	color: #345487;
+	font-weight: bold;
+}
+
+.a_form_field {
+	border: none;
+	width: 100%;
+}
+
+.a_form_field td.a_form_field_left {
+	background-color: #eef2F7;
+	border-bottom: 1px solid #d1dceb;
+	border-right: 1px solid #d1dceb;
+	border-top: 1px solid #fff;
+	border-left: 1px solid #fff;
+	font-size: 10px;
+}
+
+.a_form_field td.a_form_field_right {
+	background-color: #f5f9fd;
+	border-bottom: 1px solid #d1dceb;
+	border-right: 1px solid #d1dceb;
+	border-top: 1px solid #fff;
+	border-left: 1px solid #fff;
+	font-size: 10px;
+}
+
+.a_photo_preview {
+	background-color: #EEF2F7;
+	padding: 20px;
+	text-align: center;
+}
+
+.a_form_field_title {
+	font-weight: bold;
+	color: #000;
+}
+
+.a_form_field_description {
+	color: gray;
+}
+
+.a_table_list {
+	border: 1px solid black;
+	width: 100%;
+}
+
+.a_table_list th {
+	padding: 4px;
+	font-size: 10px;
+}
+
+.a_table_list td {
+	padding: 4px;
+	font-size: 12px;
+}
+
+.a_table_list_details {
+	color: gray;
+	font-size: 10px;
+}
+
+.a_comment {
+	border: 1px dashed gray;
+	padding: 5px;
+	margin-top: 5px;
+}
+
+.a_comment_hdr {
+	background-color: #d1dceb;
+	color: #345487;
+	font-weight: bold;
+	padding-left: 5px;
+}
+
+.a_comment_text {
+	padding-left: 5px;
+}
+
+.a_photo_wrap {
+	text-align: center;
+	vertical-align: top;
+/*	width: 100%;*/
+}
+
+.a_photo_wrap .a_photo_block {
+	border: 1px solid black;
+	display: -moz-inline-box;
+	display: inline-block;
+	padding: 5px 10px 5px 10px;
+	text-align: center;
+	margin-top: 2px;
+	margin-bottom: 2px;
+	margin-left: 2px;
+	margin-right: 2px;
+	height: 100%;
+	vertical-align: top;
+}
+
+.a_photo_wrap .a_photo_block {
+	display: inline;
+	text-align: center;
+}
+
+.a_photo_wrap > .a_photo_block {
+	display: -moz-inline-box;
+	display: inline-block;
+	text-align: center;
+}
+
+.a_comment_actions,
+.a_photo_actions {
+	text-align: right;
+	padding-top: 3px;
+}
+
+.a_photo_title {
+	color: black;
+	font-size: 8pt;
+	text-align: center;
+	padding-top: 2px;
+	padding-bottom: 5px;
+}
+
+.a_photo_details {
+	color: gray;
+	font-size: 7pt;
+	text-align: center;
+	padding-top: 0px;
+}
+
+form {
+	display: inline;
+}
+
+input { vertical-align: middle; }
+
+.a_dark_button {
+	border: 1px solid #4c77b6;
+	background-color: #b1bece;
+	font-family: Verdana, Arial;
+	font-size: 10px;
+	font-weight: bold;
+	padding: 2px;
+}
+
+.text_input_on {
+	background-color: #fff;
+	color: #000;
+	font-size: 10px;
+	font-family: Verdana, Arial, Sans-Serif;
+	padding: 2px;
+	border: 2px inset #bcd0ed;
+}
+
+.text_input_off {
+	background-color: #f5f9fd;
+	color: #000;
+	font-size: 10px;
+	font-family: Verdana, Arial, Sans-Serif;
+	padding: 2px;
+	border: 2px inset #bcd0ed;
+}
+
+
+.dropdown_on {
+	background-color: #fff;
+	color: #000;
+	font-size: 10px;
+	font-family: Verdana, Arial, Sans-Serif;
+	padding: 2px;
+	border: 2px inset #bcd0ed;
+}
+
+.dropdown_off {
+	background-color: #f5f9fd;
+	color: #000;
+	font-size: 10px;
+	font-family: Verdana, Arial, Sans-Serif;
+	padding: 2px;
+	border: 2px inset #bcd0ed;
+}
