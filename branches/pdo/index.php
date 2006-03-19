@@ -1,8 +1,10 @@
 <?php
 // $Id$
 
-require_once("includes/session.php");
 require_once("DB/DataObject.php");
+DB_DataObject::debugLevel(5);
+
+require_once("includes/session.php");
 require_once("includes/html.php");
 require_once("includes/lang.php");
 require_once("includes/smarty.php");

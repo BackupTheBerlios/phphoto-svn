@@ -1,7 +1,6 @@
 <?php
 // $Id$
 
-require_once("DB/DataObject.php");
 require_once("includes/db.php");
 require_once("includes/config.php");
 require_once("includes/utils.php");
@@ -19,11 +18,13 @@ class Session {
 	var $_uid = ANON_USER;
 
 	private function __construct() {
-		global $db;
+		
+		$db = Database::singletone()->db();
 
 		$expire_time = time() - Config::get("session_lifetime", 3600);
 		$sq = $db->prepare("DELETE FROM phph_sessions WHERE session_time < ?");
-		$db->execute($sq, $expire_time);
+		$sq->bindParam(1, $expire_time);
+		$sq->execute();
 
 		$c_domain = Config::get("cookie_domain");
 		$c_path = Config::get("cookie_path");
@@ -45,22 +46,18 @@ class Session {
 		if (!empty($this->_sid)) {
 
 			// Check if session exists
-			$sdbo = DB_DataObject::Factory('phph_sessions');
-			if (PEAR::isError($sdbo))
-				die($sdbo->getMessage());
 
-			$r = $sdbo->get($this->_sid);
-			if (PEAR::isError($r))
-				die($sdbo->getMessage());
+			$sth = $db->prepare("SELECT COUNT(*) AS cnt FROM phph_sessions WHERE session_id = :session_id");
+			$sth->bindParam(":session_id", $this->_sid);
+			$sth->execute();
+			$r = $sth->fetchColumn(0);
+			$sth = null;
 
 			if ($r == 1) {
-
-				$sdbo->session_time = time();
-				$r = $sdbo->update();
-				$r = $sdbo->get($this->_sid);
-				if (PEAR::isError($r))
-					die($sdbo->getMessage());
-
+				$sth = $db->prepare("UPDATE phph_sessions SET session_time = :time WHERE session_id = :session_id");
+				$sth->bindParam(":session_id", $this->_sid);
+				$sth->bindValue(":time", time());
+				$sth->execute();
 				return;
 			}
 
@@ -74,62 +71,72 @@ class Session {
 
 	public function newSession() {
 
-		$sdbo = DB_DataObject::Factory('phph_sessions');
-		if (PEAR::isError($sdbo))
-			die($sdbo->getMessage());
+		$db = Database::singletone()->db();
 
-		$r = $sdbo->get($this->_sid);
-		if (PEAR::isError($r))
-			die($r->getMessage());
+		//$db->beginTransaction();
 
+		$sth = $db->prepare("SELECT COUNT(*) AS cnt FROM phph_sessions WHERE session_id = :session_id");
+		$sth->bindParam(":session_id", $this->_sid);
+		$sth->execute();
+		$r = $sth->fetchColumn(0);
+		$sth = null;
 		if ($r == 0) {
 
 			$this->_sid = md5(uniqid(Utils::getEncodedClientIP()));
 			$this->_method = SESSION_METHOD_GET;
 
-			$sdbo->session_id = $this->_sid;
-			$sdbo->user_id = $this->_uid;
-			$sdbo->session_time = time();
-			$sdbo->session_start = time();
-			$sdbo->session_ip = Utils::getEncodedClientIP();
-			
-			$r = $sdbo->insert();
-			if (PEAR::isError($r))
-				die($r->getMessage());
+			$sth = $db->prepare(
+				"INSERT INTO phph_sessions (session_id, user_id, session_time, session_start, session_ip) " .
+				"VALUES (:session_id, :user_id, :session_time, :session_start, :session_ip)");
+			$sth->bindParam(":session_id", $this->_sid);
+			$sth->bindParam(":user_id", $this->_uid);
+			$sth->bindValue(":session_time", time());
+			$sth->bindValue(":session_start", time());
+			$sth->bindValue(":session_ip", Utils::getEncodedClientIP());
+			$sth->execute();
+			$sth = null;
 	
 		} else {
-			$sdbo->user_id = $this->_uid;
-			$sdbo->session_time = time();
-			$sdbo->session_ip = Utils::getEncodedClientIP();
-			
-			$r = $sdbo->update();
-			if (PEAR::isError($r))
-				die($r->getMessage());
 
+			$sth = $db->prepare(
+				"UPDATE phph_sessions SET user_id = :user_id, session_time = :session_time, session_ip = :session_ip " .
+				"WHERE session_id = :session_id");
+			$sth->bindParam(":session_id", $this->_sid);
+			$sth->bindParam(":user_id", $this->_uid);
+			$sth->bindValue(":session_time", time());
+			$sth->bindValue(":session_ip", Utils::getEncodedClientIP());
+			$sth->execute();
+			$sth = null;
 		}
 
-		$hdbo = DB_DataObject::Factory('phph_session_history');
-		if (PEAR::isError($hdbo))
-			die($hdbo->getMessage());
-		$r = $hdbo->get($this->_sid);
-		if (PEAR::isError($r))
-			die($r->getMessage());
+		$sth = $db->prepare("SELECT COUNT(*) AS cnt FROM phph_session_history WHERE session_id = :session_id");
+		$sth->bindParam(":session_id", $this->_sid);
+		$sth->execute();
+		$r = $sth->fetchColumn(0);
+		$sth = null;
 
 		if ($r == 0) {
-			$hdbo->session_id = $this->_sid;
-			$hdbo->user_id = $this->_uid;
-			$hdbo->session_start = time();
-			$hdbo->session_ip = Utils::getEncodedClientIP();
-			$r = $hdbo->insert();
-			if (PEAR::isError($r))
-				die($r->getMessage());
-		} else {
-			$hdbo->user_id = $this->_uid;
-			$hdbo->session_ip = Utils::getEncodedClientIP();
+
+			$sth = $db->prepare(
+				"INSERT INTO phph_session_history (session_id, user_id, session_start, session_ip) " .
+				"VALUES (:session_id, :user_id, :session_start, :session_ip)");
+			$sth->bindParam(":session_id", $this->_sid);
+			$sth->bindParam(":user_id", $this->_uid);
+			$sth->bindValue(":session_start", time());
+			$sth->bindValue(":session_ip", Utils::getEncodedClientIP());
+			$sth->execute();
+			$sth = null;
 			
-			$r = $hdbo->update();
-			if (PEAR::isError($r))
-				die($r->getMessage());
+		} else {
+
+			$sth = $db->prepare(
+				"UPDATE phph_session_history SET user_id = :user_id, session_ip = :session_ip " .
+				"WHERE session_id = :session_id");
+			$sth->bindParam(":session_id", $this->_sid);
+			$sth->bindParam(":user_id", $this->_uid);
+			$sth->bindValue(":session_ip", Utils::getEncodedClientIP());
+			$sth->execute();
+			$sth = null;
 		}
 
 		if ($this->_uid != ANON_USER) {
@@ -180,8 +187,10 @@ class Session {
 		$c_path = Config::get("cookie_path");
 		$sid_name = Session::getSIDCookieName();
 		$uid_name = Session::getUIDCookieName();
+		
+		print("Session::newSession(): c_domain: $c_domain, c_path: $c_path, sid_name = $sid_name, uid_name = $uid_name, sid: " . $this->_sid);
 
-		setcookie($sid_name, $this->_sid, 0, $c_path, $c_domain);
+		setcookie($sid_name, $this->_sid, time() + 31536000, $c_path, $c_domain);
 		setcookie($uid_name, $this->_uid, time() + 31536000, $c_path, $c_domain);	// expire in 1 year
 	}
 
@@ -236,6 +245,14 @@ class Session {
 				die($r->getMessage());
 		}
 		return $this->_user;
+	}
+
+	public function sid() {
+		return $this->_sid;
+	}
+
+	public function uid() {
+		return $this->_uid;
 	}
 }
 

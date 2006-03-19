@@ -1,33 +1,19 @@
 <?php
 // $Id$
 
-require_once("DB/DataObject.php");
 require_once("includes/db.php");
 
 class Config {
 
-	var $_config;
-
-	function Config() {
-		$this->_config = DB_DataObject::Factory('phph_config');
-		if (PEAR::isError($this->_config)) {
-			die($this->_config->getMessage());
-		}
-	}
-
 	static function getStatic($name, $def = "") {
-
-		$config = DB_DataObject::Factory('phph_config');
-		if (PEAR::isError($config)) {
-			die($config->getMessage());
-		}
-
-		$r = $config->get($name);
-		if (PEAR::isError($r))
+		$db = Database::singletone()->db();
+		
+		$sth = $db->prepare("SELECT config_value FROM phph_config WHERE config_name = :config_name");
+		$sth->bindParam(":config_name", $name, PDO::PARAM_STR);
+		$sth->execute();
+		if (!$row = $sth->fetch())
 			return $def;
-		if ($r == 0)
-			return $def;
-		return $config->config_value;
+		return $row['config_value'];
 	}
 
 	static function get($name, $def = "") {
@@ -35,21 +21,18 @@ class Config {
 	}
 
 	static function set($name, $val) {
-
-		$config = DB_DataObject::Factory('phph_config');
-		if (PEAR::isError($config)) {
-			return $config;
-		}
-
-		$r = $config->get($name);
-		if (PEAR::isError($r))
-			return $config;
-		$config->config_value = $val;
-		if ($r == 0) {
-			return $config->insert();
+		$db = Database::singletone()->db();
+		$sth = $db->prepare("SELECT config_value FROM phph_config WHERE config_name = :config_name");
+		$sth->bindParam(":config_name", $name, PDO::PARAM_STR);
+		$sth->execute();
+		if (!$sth->fetch()) {
+			$sth = $db->prepare("INSERT INTO phph_config (config_value, config_name) VALUES (:config_value, :config_name)");
 		} else {
-			return $config->update();
+			$q = $db->prepare("UPDATE phph_config SET config_value = :config_value, config_name = :config_name");
 		}
+		$sth->bindParam(":config_name", $name, PDO::PARAM_STR);
+		$sth->bindParam(":config_value", $val, PDO::PARAM_STR);
+		$sth->execute();
 	}
 };
 

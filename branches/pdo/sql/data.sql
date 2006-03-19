@@ -1,8 +1,8 @@
-insert into phph_config (config_name, config_value) values ("site_url", "http://phphoto.nmax.eu.org");
+insert into phph_config (config_name, config_value) values ("site_url", "http://choman.usr.tkk.net.pl/phph");
 insert into phph_config (config_name, config_value) values ("default_language", "en");
 insert into phph_config (config_name, config_value) values ("default_admin_language", "en");
 insert into phph_config (config_name, config_value) values ("site_title", "PHPhoto test site");
-insert into phph_config (config_name, config_value) values ("cookie_domain", "http://phphoto.nmax.eu.org");
+insert into phph_config (config_name, config_value) values ("cookie_domain", "http://choman.usr.tkk.net.pl");
 insert into phph_config (config_name, config_value) values ("cookie_name", "phph");
 insert into phph_config (config_name, config_value) values ("cookie_path", "/");
 insert into phph_config (config_name, config_value) values ("session_lifetime", "3600");
