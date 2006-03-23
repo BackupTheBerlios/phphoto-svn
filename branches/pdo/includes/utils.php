@@ -4,21 +4,27 @@
 require_once("Mail.php");
 require_once("Mail/mime.php");
 
-class Exception2 extends Exception {
-
-	private $_desc;
-
-	function __construct($msg, $desc, $code = 0) {
-		parent::__construct($msg, $code);
-		$this->_desc = $desc;
-	}
-
-	final function getDescription() {
-		return $this->_desc;
-	}
-};
-
 class Utils {
+
+	static function negotiateContentType($charset = "utf-8") {
+		$xhtml = false;
+		if (preg_match('/application\/xhtml\+xml(?![+a-z])(;q=(0\.\d{1,3}|[01]))?/i', $_SERVER['HTTP_ACCEPT'], $matches)) {
+			$xhtmlQ = isset($matches[2])?($matches[2]+0.2):1;
+			if (preg_match('/text\/html(;q=(0\d{1,3}|[01]))s?/i', $_SERVER['HTTP_ACCEPT'], $matches)) {
+				$htmlQ = isset($matches[2]) ? $matches[2] : 1;
+				$xhtml = ($xhtmlQ >= $htmlQ);
+			} else {
+				$xhtml = true;
+			}
+		}
+		if ($xhtml) {
+			header('Content-Type: application/xhtml+xml; charset=' . $charset);
+			return "application/xhtml+xml";
+		} else {
+			header('Content-Type: text/html; charset=' . $charset);
+			return "text/html";
+		}
+	}
 
 	static function gp($var, $def = null) {
 		if (isset($_GET[$var]))
@@ -92,9 +98,24 @@ class Utils {
 			 $string .= "\n";
 		 }
 		 return $string;
-	 }
-	
-	static function mail($subject, $txt_body, $to_email, $to_name = "", $html_body = "", $text_charset = "iso-8859-2", $html_charset = "iso-8859-2", $head_charset = "iso-8859-2") {
+	}
+
+	function mb_mime_header($string, $encoding = null, $linefeed="\r\n") {
+		if(!$encoding) $encoding = mb_internal_encoding();
+		$encoded = '';
+
+		while($length = mb_strlen($string)) {
+			$encoded .= "=?$encoding?B?"
+				. base64_encode(mb_substr($string,0,24,$encoding))
+				. "?=$linefeed";
+
+			$string = mb_substr($string,24,$length,$encoding);
+		}
+
+		return $encoded;
+	}
+
+	static function mail($subject, $txt_body, $to_email, $to_name = "", $html_body = "", $text_charset = "UTF-8", $html_charset = "UTF-8", $head_charset = "UTF-8", $text_encoding = "8bit", $html_encoding = "quoted-printable") {
 
 		$mime = new Mail_mime("\n");
 
@@ -104,18 +125,27 @@ class Utils {
 			$to = "$to_name <$to_email>";
 		else
 			$to = $to_email;
+
+		//$subject = self::mb_mime_header($subject, $head_charset);
 		$headers = array(
 			"From" => Config::get("email_user") . " <" . Config::get("email_from") . ">",
-			"Subject" => $subject,
 			"Reply-To" => Config::get("email_from"),
-			"Return-Path" => Config::get("email_from")
+			"Return-Path" => Config::get("email_from"),
 		);
 
+		$txt_body .= "\n\n-- \nEmail wysany automatycznie. Prosimy nie odpowiadać\n";
 		$mime->setTXTBody(Utils::linewrap($txt_body));
+		$mime->setSubject($subject);
 		if (!empty($html_body))
 			$mime->setHTMLBody($html_body);
 
-		$body = $mime->get(array('text_charset' => $text_charset, 'html_charset' => $html_charset, 'head_charset' => $head_charset));
+		$body = $mime->get(array(
+			'text_charset' => $text_charset,
+			'html_charset' => $html_charset,
+			'head_charset' => $head_charset,
+			'text_encoding' => $text_encoding,
+			'html_encoding' => $html_encoding
+		));
 		$headers = $mime->headers($headers);
 	
 		$rcpt = $to;

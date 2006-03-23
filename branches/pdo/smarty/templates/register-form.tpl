@@ -1,7 +1,5 @@
 {* Smarty *}
 
-{include file="error.tpl"}
-
 <form name="register_form" method="post" action="{$register_action}">
 <input type="hidden" name="ref" value="{$ref|escape}" />
 <input type="hidden" name="submit" value="1" />

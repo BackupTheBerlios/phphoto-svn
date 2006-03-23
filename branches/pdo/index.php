@@ -1,9 +1,6 @@
 <?php
 // $Id$
 
-require_once("DB/DataObject.php");
-DB_DataObject::debugLevel(5);
-
 require_once("includes/session.php");
 require_once("includes/html.php");
 require_once("includes/lang.php");
@@ -17,7 +14,7 @@ $url = Config::get("site_url");
 $ref = Utils::pg("ref");
 $page = Utils::pg("p", 0);
 $count = Utils::pg("c", 20);
-$action = Utils::pg("action", "index");
+$action = Utils::pg("action", "start");
 
 $session = Session::singletone();
 if (Config::get("require_login", 0) && $action != 'login' && $session->requireLogin())
@@ -26,8 +23,24 @@ if (Config::get("require_login", 0) && $action != 'login' && $session->requireLo
 $smarty = new Phph_Smarty($action);
 $smarty->assign('ref', $ref);
 $smarty->assign('self', Utils::selfURL());
+$smarty->assign('action', $action);
+$smarty->assign('page', $page);
+$smarty->assign('count', $count);
 
-$templates = array(
+$templates = array();	// action => template, default: action => action.tpl
+$actions = array();	// action => function, default: action => action_actionname()
+
+if (!empty($templates[$action]))
+	$template = $templates[$action];
+else
+	$template = $action . ".tpl";
+
+if (!empty($actions[$action]))
+	$action_fn = $actions[$action];
+else
+	$action_fn = "action_" . $action;
+
+/*$templates = array(
 	'index' => 'index.tpl',
 	'view' => 'view.tpl',
 	'categories' => 'categories.tpl',
@@ -39,6 +52,7 @@ $templates = array(
 	'activate' => 'activation.tpl',
 	'login' => 'login.tpl'
 );
+*/
 
 $smarty->register_function('url', 'smarty_url');
 
@@ -99,7 +113,7 @@ function pager($url, $total) {
 	return $pages;
 }
 
-function action_index() {
+function action_start() {
 	global $smarty, $template;
 }
 
@@ -316,8 +330,8 @@ function action_register() {
 	global $smarty, $url, $ref, $template, $db, $page, $count;
 
 	if (!Config::get("enable_registration")) {
-		$smarty->assign('page_title', "Rejestracja chwilowo niedostêpna.");
-		$template = "reg-disabled";
+		$smarty->assign('page_title', "Rejestracja chwilowo niedostï¿½na.");
+		$template = "reg-disabled.tpl";
 		return;
 	}
 
@@ -326,20 +340,13 @@ function action_register() {
 	if (!empty($_POST['submit'])) {
 		$user = new User(0);
 
-		try {
-			$pid = $user->register($_POST);
-			$user = new User($pid);
-			if (Config::get("account_activation", 0))
-				$user->sendActivation(url('activate'));
-			else
-				$user->activate($user->_dbo->user_activation, url('login'));
-			$register_ok = true;
-
-		} catch (Exception2 $e) {
-			$smarty->assign('error', 1);
-			$smarty->assign('error_title', $e->getMessage());
-			$smarty->assign('error_description', $e->getDescription());
-		}
+		$pid = $user->register($_POST);
+		$user = new User($pid);
+		if (Config::get("account_activation", 0))
+			$user->sendActivation(url('activate'));
+		else
+			$user->activate($user->dbdata('user_activation'), url('login'));
+		$register_ok = true;
 	}
 	
 	$user_login = Utils::p('user_login');
@@ -351,9 +358,9 @@ function action_register() {
 	$smarty->assign('need_activation', Config::get("account_activation"));
 
 	if ($register_ok)
-		$template = "registered";
+		$template = "registered.tpl";
 	else
-		$template = "register";
+		$template = "register-form.tpl";
 }
 
 function action_activate() {
@@ -371,31 +378,23 @@ function action_activate() {
 	} catch (Exception $e) {
 		$smarty->assign('error', 1);
 		$smarty->assign('error_title', $e->getMessage());
-		$smarty->assign('error_description', $e->getDescription());
 	}
 }
 
 function action_login() {
 	global $smarty, $ref;
 
-	if (!empty($_POST['submit'])) {
-		try {
-			$user = new User(0);
-			$user->login($_POST['user_login'], $_POST['user_pass']);
-			if (empty($ref))
-				header("Location: " . url('index'));
-			else
-				header("Location: $ref");
-		} catch (Exception $e) {
-			$smarty->assign('error', 1);
-			$smarty->assign('error_title', $e->getMessage());
-			$smarty->assign('error_description', $e->getDescription());
-		}
-			
-
-	}
 	$smarty->assign('login_action', url('login'));
 	$smarty->assign('page_title', 'Logowanie');
+
+	if (!empty($_POST['submit'])) {
+		$user = new User(0);
+		$user->login($_POST['user_login'], $_POST['user_pass']);
+		if (empty($ref))
+			header("Location: " . url('start'));
+		else
+			header("Location: $ref");
+	}
 }
 
 function action_postcomment() {
@@ -416,42 +415,24 @@ function action_postcomment() {
 	exit();
 }
 
-$template = $action;
+Utils::negotiateContentType();
 
-if ($action == 'view') {
-	action_view();
-} elseif ($action == "categories") {
-	action_categories();
-} elseif ($action == "category") {
-	action_category();
-} elseif ($action == "user") {
-	action_user();
-} elseif ($action == "register") {
-	action_register();
-} elseif ($action == "activate") {
-	action_activate();
-} elseif ($action == "login") {
-	action_login();
-} elseif ($action == "postcomment") {
-	action_postcomment();
-} elseif ($action == "subscribe") {
-	action_subscribe();
-} elseif ($action == "unsubscribe") {
-	action_unsubscribe();
-} else {
-	$action = "index";
-	$template = $action;
-	action_index();
+ob_start();
+
+try {
+
+	
+	if (!empty($action_fn))
+		eval($action_fn . "();");
+
+} catch (Exception $e) {
+	$smarty->assign('error', 1);
+	$smarty->assign('error_title', $e->getMessage());
 }
 
-HTML::startHTML();
-HTML::head($smarty->get_template_vars('page_title'));
-HTML::startBODY();
+$smarty->assign("template", $template);
+$smarty->display("index.tpl");
 
-$smarty->display($templates[$template]);
-
-HTML::endBODY();
-HTML::endHTML();
-
+ob_flush();
 
 ?>

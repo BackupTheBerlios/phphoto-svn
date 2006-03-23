@@ -1,7 +1,6 @@
 <?php
 // $Id$
 
-require_once("Mail.php");
 require_once("Mail/RFC822.php");
 require_once("includes/db.php");
 require_once("includes/config.php");
@@ -16,41 +15,48 @@ class User {
 
 
 	function __construct($uid = 0) {
-
 		$this->_uid = $uid;
+		$this->updateDBData();
+	}
 
+	private function updateDBData() {
 		if ($this->_uid > 0) {
 			$sth = Database::singletone()->db()->prepare("SELECT * FROM phph_users WHERE user_id = :user_id");
-			$sth->bindParam(":user_id", $uid);
+			$sth->bindParam(":user_id", $this->_uid);
 			$sth->execute();
-			if (!($this->_dbdata = $sth->fetchRow()))
-				throw new Exception2("Bd", "Uytkownik nie istnieje", USER_NOT_FOUND);
+			if (!($this->_dbdata = $sth->fetch()))
+				throw new Exception("Uytkownik nie istnieje");
 		}
+	}
+
+	function dbdata($name) {
+		return $this->_dbdata[$name];
 	}
 
 	function register(&$data) {
 
 		$session = Session::singletone();
+		$db = Database::singletone()->db();
 
 
 		if (empty($data['user_login'])) {
-			throw new Exception2("Nie mona zarejestrowa�konta", "Musisz poda�login.");
+			throw new Exception("Nie mona zarejestrowa�konta. Musisz poda�login.");
 		}
 
 		if (empty($data['user_pass1']) || empty($data['user_pass2'])) {
-			throw new Exception2("Nie mona zarejestrowa�konta", "Haso nie moe by�puste.");
+			throw new Exception("Nie mona zarejestrowa�konta. Haso nie moe by�puste.");
 		}
 		
 		if (empty($data['user_email'])) {
-			throw new Exception2("Nie mona zarejestrowa�konta", "Musisz poda�email.");
+			throw new Exception("Nie mona zarejestrowa�konta. Musisz poda�email.");
 		}
 
 		$addr = Mail_RFC822::parseAddressList($data['user_email'], "");
 		if (empty($addr))
-			throw new Exception2("Nie mona zarejestrowa�konta", "Podany adres email jest nieprawidowy.");
+			throw new Exception("Nie mona zarejestrowa�konta. Podany adres email jest nieprawidowy.");
 
 		if ($data['user_pass1'] != $data['user_pass2']) {
-			throw new Exception2("Nie mona zarejestrowa�konta", "Podane hasa r�i si�");
+			throw new Exception("Nie mona zarejestrowa�konta. Podane hasa r�i si�");
 		}
 		
 		$user_login = trim($data['user_login']);
@@ -58,50 +64,40 @@ class User {
 		$user_pass2 = $data['user_pass2'];
 		$user_email = trim($data['user_email']);
 
-		$this->_dbo = DB_DataObject::Factory('phph_users');
-		if (PEAR::isError($this->_dbo)) {
-			throw new Exception2(_INTERNAL_ERROR, $this->_dbo->getMessage());
+		$sth = $db->prepare("SELECT COUNT(*) AS cnt FROM phph_users WHERE user_login = :user_login");
+		$sth->bindParam(":user_login", $user_login);
+		$sth->execute();
+		$cnt = $sth->fetchColumn(0);
+		$sth = null;
+
+		if ($cnt != 0) {
+			throw new Exception("Nie mona zarejestrowa�konta. Podany login jest ju zaj�y.");
 		}
 
-		$r = $this->_dbo->get('user_login', $user_login);
-		if (PEAR::isError($r)) {
-			throw new Exception2(_INTERNAL_ERROR, $r->getMessage());
-		}
-
-		if ($r != 0) {
-			throw new Exception2("Nie mona zarejestrowa�konta", "Podany login jest ju zaj�y.");
-		}
-
-		$this->_dbo->user_login = $user_login;
-		$this->_dbo->user_pass = md5($user_pass1);
-		$this->_dbo->user_email = $user_email;
-		$this->_dbo->user_registered = time();
-		$this->_dbo->user_activation = md5(uniqid($user_login));
-
-		$r = $this->_dbo->insert();
-		if (PEAR::isError($r)) {
-			throw new Exception2(_INTERNAL_ERROR, $r->getMessage());
-		}
-
-		return $r;
+		$sth = $db->prepare(
+			"INSERT INTO phph_users (user_login, user_pass, user_email, user_registered, user_activation) VALUES ".
+			"(:user_login, :user_pass, :user_email, :user_registered, :user_activation)"
+		);
+		$sth->bindParam(":user_login", $user_login);
+		$sth->bindValue(":user_pass", md5($user_pass1));
+		$sth->bindParam(":user_email", $user_email);
+		$sth->bindValue(":user_registered", time());
+		$sth->bindValue(":user_activation", md5(uniqid($user_login)));
+		$sth->execute();
+		$sth = null;
+			
+		$this->_uid = $db->lastInsertId();
+		$this->updateDBData();
+		return $this->_uid;
 	}
 
 	function sendActivation($url) {
-		$mail = Mail::factory("mail");
 
 		$site_title = Config::get("site_title");
 		
-		$headers = array(
-			"From" => Config::get("email_user") . " <" . Config::get("email_from") . ">",
-			"To" => $this->_dbo->user_name . " <" . $this->_dbo->user_email . ">",
-			"Subject" => "Rejestracja w serwisie \"$site_title\""
-		);
+		$link = $url . "&uid=" . $this->_uid . "&r=" . $this->dbdata('user_activation');
 
-		$rcpt = $this->_dbo->user_email;
-
-		$link = $url . "&uid=" . $this->_uid . "&r=" . $this->_dbo->user_activation;
-
-		$user_login = $this->_dbo->user_login;
+		$user_login = $this->dbdata('user_login');
 		$body = <<<EOT
 Witaj $user_login,
 
@@ -116,36 +112,29 @@ $link
 
 Dzi�ujemy.
 
--- 
-Email wysany automatycznie. Prosimy nie odpowiada�
 EOT;
-		$mail->send($rcpt, $headers, $body);
+		Utils::mail("Rejestracja w serwisie \"$site_title\"", $body, $this->dbdata('user_email'), $this->dbdata('user_name'));
 	}
 
 	function activate($r, $login_url) {
 
-		if ($this->_dbo->user_activation != $r)
-			throw new Exception2("Bd aktywacji", "Konto nie istnieje.");
+		$db = Database::singletone()->db();
 
-		if ($this->_dbo->user_activated > 0)
-			throw new Exception2("Bd aktywacji", "Konto zostao ju aktywowane.");
+		if ($this->dbdata('user_activation') != $r)
+			throw new Exception("Bd aktywacji. Konto nie istnieje.");
 
-		$this->_dbo->user_activated = time();
-		$this->_dbo->update();
+		if ($this->dbdata('user_activated') > 0)
+			throw new Exception("Bd aktywacji. Konto zostao ju aktywowane.");
 
-		$mail = Mail::factory("mail");
+		//$this->_dbo->user_activated = time();
+		$sth = $db->prepare("UPDATE phph_users SET user_activated = :user_activated WHERE user_id = :uid");
+		$sth->bindValue(":user_activated", time());
+		$sth->bindParam(":uid", $this->_uid);
+		$sth->execute();
 
 		$site_title = Config::get("site_title");
 		
-		$headers = array(
-			"From" => Config::get("email_user") . " <" . Config::get("email_from") . ">",
-			"To" => $this->_dbo->user_name . " <" . $this->_dbo->user_email . ">",
-			"Subject" => "Dzi�ujemy za rejestracj�w serwisie \"$site_title\""
-		);
-
-		$rcpt = $this->_dbo->user_email;
-
-		$user_login = $this->_dbo->user_login;
+		$user_login = $this->dbdata('user_login');
 		$body = <<<EOT
 Witaj $user_login,
 
@@ -155,42 +144,59 @@ $login_url
 
 Pozdrawiamy.
 
--- 
-Email wysany automatycznie. Prosimy nie odpowiada�
 EOT;
-		$mail->send($rcpt, $headers, $body);
+		Utils::mail("Dzi�ujemy za rejestracj�w serwisie \"$site_title\"", $body, $this->dbdata('user_email'), $this->dbdata('user_name'));
 	}
 
 	function login($login, $pass) {
 
 		$session = Session::singletone();
+		$db = Database::singletone()->db();
 
-		$this->_dbo = DB_DataObject::Factory('phph_users');
-		if (PEAR::isError($this->_dbo)) {
-			throw new Exception2(_INTERNAL_ERROR, $this->_dbo->getMessage());
+		$sth = $db->prepare("SELECT * FROM phph_users WHERE user_login = :login AND user_pass = :pass");
+		$sth->bindParam(":login", $login);
+		$sth->bindValue(":pass", md5($pass));
+		$sth->execute();
+
+		if (!($this->_dbdata = $sth->fetch())) {
+			throw new Exception("Nieudane logowanie.");
 		}
+		$sth = null;
 
-		$this->_dbo->user_login = $login;
-		$this->_dbo->user_pass = md5($pass);
-		$r = $this->_dbo->find();
-		if (PEAR::isError($r)) {
-			throw new Exception2(_INTERNAL_ERROR, $r->getMessage());
-		}
+		$this->updateLastLogin();
 
-		if ($r == 0) {
-			throw new Exception2(_LOGIN_FAILED, "");
-		}
-		$r = $this->_dbo->fetch();
-		if (PEAR::isError($r)) {
-			throw new Exception2(_INTERNAL_ERROR, $r->getMessage());
-		}
-
-		$this->_dbo->user_lastlogin = time();
-		$this->_dbo->update();
-
-		$this->_uid = $this->_dbo->user_id;
-		$session->_uid = $this->_dbo->user_id;
+		$this->_uid = $this->_dbdata['user_id'];
+		$session->_uid = $this->_dbdata['user_id'];
 		$session->newSession();
+	}
+
+	function updateLastLogin() {
+		$db = Database::singletone()->db();
+		$sth = $db->prepare("UPDATE phph_users SET user_lastlogin = ? WHERE user_id = ?");
+		$sth->bindValue(1, time());
+		$sth->bindParam(2, $this->_uid);
+		$sth->execute();
+		$sth = null;
+	}
+
+	function updateIPRecord() {
+		$db = Database::singletone()->db();
+		
+		$sth = $db->prepare("UPDATE phph_user_ip SET last_visit = :last_visit WHERE user_id = :user_id AND ip = :ip");
+		$sth->bindValue(":last_visit", time());
+		$sth->bindParam(":user_id", $this->_uid);
+		$sth->bindValue(":ip", Utils::getEncodedClientIP());
+		$sth->execute();
+		$cnt = $sth->rowCount();
+		$sth = null;
+		if ($cnt == 0) {
+			$sth = $db->prepare("INSERT INTO phph_user_ip (user_id, ip, last_visit) VALUES (?, ?, ?)");
+			$sth->bindParam(1, $this->_uid);
+			$sth->bindValue(2, Utils::getEncodedClientIP());
+			$sth->bindValue(3, time());
+			$sth->execute();
+			$sth = null;
+		}
 	}
 }
 

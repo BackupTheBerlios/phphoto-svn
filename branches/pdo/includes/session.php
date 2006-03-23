@@ -73,8 +73,6 @@ class Session {
 
 		$db = Database::singletone()->db();
 
-		//$db->beginTransaction();
-
 		$sth = $db->prepare("SELECT COUNT(*) AS cnt FROM phph_sessions WHERE session_id = :session_id");
 		$sth->bindParam(":session_id", $this->_sid);
 		$sth->execute();
@@ -141,46 +139,8 @@ class Session {
 
 		if ($this->_uid != ANON_USER) {
 
-			$idbo = DB_DataObject::Factory('phph_user_ip');
-			if (PEAR::isError($idbo))
-				die($idbo->getMessage());
-			$idbo->keys("user_id", "ip");
-			$idbo->ip = Utils::getEncodedClientIP();
-			$idbo->user_id = $this->_uid;
-			$r = $idbo->find();
-			if (PEAR::isError($r))
-				die($r->getMessage());
-
-			if ($r == 0) {
-				$idbo->user_id = $this->_uid;
-				$idbo->last_visit = time();
-				$idbo->ip = Utils::getEncodedClientIP();
-				$r = $idbo->insert();
-				if (PEAR::isError($r))
-					die($r->getMessage());
-			} else {
-				$idbo->last_visit = time();
-			
-				$r = $idbo->update();
-				if (PEAR::isError($r))
-					die($r->getMessage());
-			}
-
-			$udbo = DB_DataObject::Factory('phph_users');
-			if (PEAR::isError($udbo))
-				die($udbo->getMessage());
-			$r = $udbo->get($this->_uid);
-			if (PEAR::isError($r))
-				die($r->getMessage());
-
-			if ($r != 0) {
-				$udbo->user_lastlogin = time();
-			
-				$r = $udbo->update();
-				if (PEAR::isError($r))
-					die($r->getMessage());
-			}
-
+			$this->getUser()->updateIPRecord();
+			$this->getUser()->updateLastLogin();
 		}
 
 		$c_domain = Config::get("cookie_domain");
@@ -188,8 +148,6 @@ class Session {
 		$sid_name = Session::getSIDCookieName();
 		$uid_name = Session::getUIDCookieName();
 		
-		print("Session::newSession(): c_domain: $c_domain, c_path: $c_path, sid_name = $sid_name, uid_name = $uid_name, sid: " . $this->_sid);
-
 		setcookie($sid_name, $this->_sid, time() + 31536000, $c_path, $c_domain);
 		setcookie($uid_name, $this->_uid, time() + 31536000, $c_path, $c_domain);	// expire in 1 year
 	}
@@ -237,12 +195,7 @@ class Session {
 		if ($this->_uid == ANON_USER)
 			return null;
 		if ($this->_user == null) {
-			$this->_user = DB_DataObject::Factory('phph_users');
-			if (PEAR::isError($this->_user))
-				die($this->_user->getMessage());
-			$r = $this->_user->get($this->_uid);
-			if (PEAR::isError($r))
-				die($r->getMessage());
+			$this->_user = new User($this->_uid);
 		}
 		return $this->_user;
 	}
