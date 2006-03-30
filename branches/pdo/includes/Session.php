@@ -1,9 +1,9 @@
 <?php
 // $Id$
 
-require_once("includes/db.php");
-require_once("includes/config.php");
-require_once("includes/utils.php");
+require_once("includes/Database.php");
+require_once("includes/Config.php");
+require_once("includes/Utils.php");
 
 define('SESSION_METHOD_GET', 0);
 define('SESSION_METHOD_COOKIE', 1);
@@ -184,7 +184,7 @@ class Session {
 		if ($this->_uid == ANON_USER || empty($this->_sid)) {
 			if ($redirect) {
 				$url = Config::get("site_url");
-				header("Location: $url/index.php?action=login&ref=" . urlencode($url . $_SERVER['REQUEST_URI']));
+				header("Location: $url/index.php?action=login&ref=" . urlencode(Utils::selfURL()));
 			}
 			return true;
 		}

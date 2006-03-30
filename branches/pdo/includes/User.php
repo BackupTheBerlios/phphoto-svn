@@ -2,9 +2,9 @@
 // $Id$
 
 require_once("Mail/RFC822.php");
-require_once("includes/db.php");
-require_once("includes/config.php");
-require_once("includes/utils.php");
+require_once("includes/Database.php");
+require_once("includes/Config.php");
+require_once("includes/Utils.php");
 
 define('USER_NOT_FOUND', 1);
 

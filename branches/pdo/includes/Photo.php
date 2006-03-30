@@ -1,12 +1,11 @@
 <?php
 // $Id$
 
-require_once("DB/DataObject.php");
-require_once("includes/db.php");
-require_once("includes/config.php");
-require_once("includes/utils.php");
-require_once("includes/category.php");
-require_once("includes/comment.php");
+require_once("includes/Database.php");
+require_once("includes/Config.php");
+require_once("includes/Utils.php");
+require_once("includes/Category.php");
+require_once("includes/Comment.php");
 
 define('PHOTO_NOT_FOUND', 1);
 define('PHOTO_USER_NOT_FOUND', 2);
@@ -33,21 +32,21 @@ class Photo {
 		if ($this->_pid != 0) {
 			$this->_dbo = DB_DataObject::Factory("phph_photos");
 			if (PEAR::isError($this->_dbo))
-				throw new Exception2("B³±d wewnêtrzny", $this->_dbo->getMessage());
+				throw new Exception2("Bd wewnï¿½rzny", $this->_dbo->getMessage());
 			$r = $this->_dbo->get($pid);
 			if (PEAR::isError($r))
-				throw new Exception2("B³±d wewnêtrzny", $r->getMessage());
+				throw new Exception2("Bd wewnï¿½rzny", $r->getMessage());
 			if ($r == 0)
-				throw new Exception2("B³±d", "Zdjêcie nie istnieje", PHOTO_NOT_FOUND);
+				throw new Exception2("Bd", "Zdjï¿½ie nie istnieje", PHOTO_NOT_FOUND);
 
 			$this->_user = DB_DataObject::Factory("phph_users");
 			if (PEAR::isError($this->_user))
-				throw new Exception2("B³±d wewnêtrzny", $this->_user->getMessage());
+				throw new Exception2("Bd wewnï¿½rzny", $this->_user->getMessage());
 			$r = $this->_user->get($this->_dbo->user_id);
 			if (PEAR::isError($r))
-				throw new Exception2("B³±d wewnêtrzny", $r->getMessage());
+				throw new Exception2("Bd wewnï¿½rzny", $r->getMessage());
 			if ($r == 0)
-				throw new Exception2("B³±d spójno¶ci danych", "U¿ytkownik do którego nalezy zdjêcie nie istnieje.<br />Skontakuj siê z administratorem, podaj±c numer zdjêcia ($pid).", PHOTO_USER_NOT_FOUND);
+				throw new Exception2("Bd spï¿½noci danych", "Uytkownik do ktï¿½ego nalezy zdjï¿½ie nie istnieje.<br />Skontakuj siï¿½z administratorem, podajc numer zdjï¿½ia ($pid).", PHOTO_USER_NOT_FOUND);
 
 			$q = $db->prepare("SELECT pc.category_id, c.category_name " .
 					  "FROM phph_photos_categories pc " .
@@ -209,18 +208,18 @@ class Photo {
 				$txt_body = <<<EOT
 Witaj $name,
 
-W nastêpuj±cych kategoriach:
+W nastï¿½ujcych kategoriach:
  - $cats
-pojawi³o siê nowe zdjêcie:
-Tytu³: $title
+pojawio siï¿½nowe zdjï¿½ie:
+Tytu: $title
 Autor: $author
 $link
 
 -- 
-Ten email zosta³ wys³any automatycznie.
-Prosimy nie odpowiadaæ.
+Ten email zosta wysany automatycznie.
+Prosimy nie odpowiadaï¿½
 EOT;
-				Utils::mail("Nowe zdjêcie w obserwowanych kategoriach.", $txt_body, $user['user_email'], $user['user_name']);
+				Utils::mail("Nowe zdjï¿½ie w obserwowanych kategoriach.", $txt_body, $user['user_email'], $user['user_name']);
 			}
 		}
 
@@ -231,13 +230,13 @@ EOT;
 			$txt_body = <<<EOT
 Witaj $name,
 
-Twoje zdjêcie "$title" zosta³o w³a¶nie zaakceptowane przez moderatora ($moderator).
+Twoje zdjï¿½ie "$title" zostao wanie zaakceptowane przez moderatora ($moderator).
 
 -- 
-Ten email zosta³ wys³any automatycznie.
-Prosimy nie odpowiadaæ.
+Ten email zosta wysany automatycznie.
+Prosimy nie odpowiadaï¿½
 EOT;
-			Utils::mail("Twoje zdjêcie zosta³o zaakceptowane.", $txt_body, $this->_user->user_email, $this->_user->user_name);
+			Utils::mail("Twoje zdjï¿½ie zostao zaakceptowane.", $txt_body, $this->_user->user_email, $this->_user->user_name);
 		}
 	
 	}
@@ -407,16 +406,16 @@ EOT;
 			$body = <<<EOT
 Witaj $to_name,
 
-U¿ytkownik $author doda³ do Twojego zdjêcia "$photo_title" komentarz. Poni¿ej znajduje siê tre¶æ komentarza:
+Uytkownik $author doda do Twojego zdjï¿½ia "$photo_title" komentarz. Poniej znajduje siï¿½treï¿½komentarza:
 
 $title
 
 $text
 
 -- 
-Ten email zosta³ wys³any automatycznie. Prosimy nie odpowiadaæ.
+Ten email zosta wysany automatycznie. Prosimy nie odpowiadaï¿½
 EOT;
-			Utils::mail("Nowy komentarz do Twojego zdjêcia \"$photo_title\".", $body, $this->_user->user_email, $this->_user->user_name);
+			Utils::mail("Nowy komentarz do Twojego zdjï¿½ia \"$photo_title\".", $body, $this->_user->user_email, $this->_user->user_name);
 		}
 	}
 

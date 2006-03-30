@@ -2,8 +2,8 @@
 // $Id$
 
 require_once("XML/Parser.php");
-require_once("includes/config.php");
-require_once("includes/session.php");
+require_once("includes/Config.php");
+require_once("includes/Session.php");
 
 class XML_LangFile extends XML_Parser {
 	var $_langs = array();

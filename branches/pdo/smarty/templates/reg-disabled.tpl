@@ -1,5 +1,6 @@
 {* Smarty *}
+{* $Id$ *}
 
-Przepraszamy, rejestracja nowych kont zosta≥ chwilowo wstrzymana.
+Przepraszamy, rejestracja nowych kont zosta≈Ça chwilowo wstrzymana.
 
 

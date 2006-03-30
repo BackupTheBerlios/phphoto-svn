@@ -1,10 +1,9 @@
 <?php
 // $Id$
 
-require_once("DB/DataObject.php");
-require_once("includes/db.php");
-require_once("includes/config.php");
-require_once("includes/utils.php");
+require_once("includes/Database.php");
+require_once("includes/Config.php");
+require_once("includes/Utils.php");
 
 define('CATEGORY_NOT_FOUND', 1);
 define('CATEGORY_PARENT_NOT_FOUND', 2);
@@ -24,12 +23,12 @@ class Category {
 		
 			$this->_dbo = DB_DataObject::Factory("phph_categories");
 			if (PEAR::isError($this->_dbo))
-				throw new Exception2("B³±d wewnêtrzny", $this->_dbo->getMessage());
+				throw new Exception2("Bd wewnï¿½rzny", $this->_dbo->getMessage());
 			$r = $this->_dbo->get($cid);
 			if (PEAR::isError($r))
-				throw new Exception2("B³±d wewnêtrzny", $r->getMessage());
+				throw new Exception2("Bd wewnï¿½rzny", $r->getMessage());
 			if ($r == 0)
-				throw new Exception2("B³±d", "Kategoria nie istnieje", CATEGORY_NOT_FOUND);
+				throw new Exception2("Bd", "Kategoria nie istnieje", CATEGORY_NOT_FOUND);
 		}
 
 	}
@@ -60,12 +59,12 @@ class Category {
 
 		$dbo = DB_DataObject::Factory("phph_categories");
 		if (PEAR::isError($dbo))
-			throw new Exception2("B³±d wewnêtrzny", $dbo->getMessage());
+			throw new Exception2("Bd wewnï¿½rzny", $dbo->getMessage());
 		$r = $dbo->get($cid);
 		if (PEAR::isError($r))
-			throw new Exception2("B³±d wewnêtrzny", $r->getMessage());
+			throw new Exception2("Bd wewnï¿½rzny", $r->getMessage());
 		if ($r == 0)
-			throw new Exception2("B³±d", "Kategoria nie istnieje", CATEGORY_NOT_FOUND);
+			throw new Exception2("Bd", "Kategoria nie istnieje", CATEGORY_NOT_FOUND);
 
 		$sub = array();
 

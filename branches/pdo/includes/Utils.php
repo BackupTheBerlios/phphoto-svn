@@ -3,6 +3,8 @@
 
 require_once("Mail.php");
 require_once("Mail/mime.php");
+require_once("includes/Config.php");
+require_once("includes/Session.php");
 
 class Utils {
 
@@ -28,38 +30,59 @@ class Utils {
 
 	static function gp($var, $def = null) {
 		if (isset($_GET[$var]))
-			return urldecode($_GET[$var]);
+			return strip_tags(urldecode($_GET[$var]));
 		elseif (isset($_POST[$var]))
-			return $_POST[$var];
+			return strip_tags($_POST[$var]);
 		else
 			return $def;
 	}
 	
 	static function pg($var, $def = null) {
 		if (isset($_POST[$var]))
-			return $_POST[$var];
+			return strip_tags($_POST[$var]);
 		elseif (isset($_GET[$var]))
-			return urldecode($_GET[$var]);
+			return strip_tags(urldecode($_GET[$var]));
 		else
 			return $def;
 	}
 	
 	static function p($var, $def = null) {
 		if (isset($_POST[$var]))
-			return $_POST[$var];
+			return strip_tags($_POST[$var]);
 		else
 			return $def;
 	}
 
 	static function g($var, $def = null) {
 		if (isset($_GET[$var]))
-			return urldecode($_GET[$var]);
+			return strip_tags(urldecode($_GET[$var]));
 		else
 			return $def;
 	}
 
 	static function selfURL() {
 		return "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+	}
+	
+	static function url($action, $attrs = array(), $script = "index.php") {
+	
+		$s = Config::get("site_url") . "/$script?action=$action";
+		$s = Session::singletone()->addSID($s);
+		$ref = self::pg("ref");
+		if (!empty($ref))
+			$s .= "&amp;ref=" . htmlspecialchars(urlencode($ref));
+	
+		foreach ($attrs as $id => $val) {
+			$s .= htmlspecialchars("&$id=" . urlencode($val));
+		}
+	
+		return $s;
+	}
+
+	static function secureHeaderData($data) {
+		$data = str_replace("\n", "", $data);
+		$data = str_replace("\r", "", $data);
+		return $data;
 	}
 
 	static function encodeIP($dotquad_ip) {

@@ -1,12 +1,11 @@
 <?php
 // $Id$
 
-require_once("DB/DataObject.php");
-require_once("includes/db.php");
-require_once("includes/config.php");
-require_once("includes/utils.php");
-require_once("includes/user.php");
-require_once("includes/photo.php");
+require_once("includes/Database.php");
+require_once("includes/Config.php");
+require_once("includes/Utils.php");
+require_once("includes/User.php");
+require_once("includes/Photo.php");
 
 define('COMMENT_NOT_FOUND', 1);
 define('COMMENT_USER_NOT_FOUND', 1);
@@ -26,21 +25,21 @@ class Comment {
 		
 			$this->_dbo = DB_DataObject::Factory("phph_comments");
 			if (PEAR::isError($this->_dbo))
-				throw new Exception2("B³±d wewnêtrzny", $this->_dbo->getMessage());
+				throw new Exception2("Bd wewnï¿½rzny", $this->_dbo->getMessage());
 			$r = $this->_dbo->get($cmid);
 			if (PEAR::isError($r))
-				throw new Exception2("B³±d wewnêtrzny", $r->getMessage());
+				throw new Exception2("Bd wewnï¿½rzny", $r->getMessage());
 			if ($r == 0)
-				throw new Exception2("B³±d", "Komentarz nie istnieje", COMMENT_NOT_FOUND);
+				throw new Exception2("Bd", "Komentarz nie istnieje", COMMENT_NOT_FOUND);
 
 			$this->_user = DB_DataObject::Factory("phph_users");
 			if (PEAR::isError($this->_user))
-				throw new Exception2("B³±d wewnêtrzny", $this->_user->getMessage());
+				throw new Exception2("Bd wewnï¿½rzny", $this->_user->getMessage());
 			$r = $this->_user->get($this->_dbo->user_id);
 			if (PEAR::isError($r))
-				throw new Exception2("B³±d wewnêtrzny", $r->getMessage());
+				throw new Exception2("Bd wewnï¿½rzny", $r->getMessage());
 			if ($r == 0)
-				throw new Exception2("B³±d spójno¶ci danych", "U¿ytkownik do którego nalezy komentarz nie istnieje.<br />Skontakuj siê z administratorem, podaj±c numer komentarza ($cmid).", COMMENT_USER_NOT_FOUND);
+				throw new Exception2("Bd spï¿½noci danych", "Uytkownik do ktï¿½ego nalezy komentarz nie istnieje.<br />Skontakuj siï¿½z administratorem, podajc numer komentarza ($cmid).", COMMENT_USER_NOT_FOUND);
 		}
 
 	}
@@ -68,9 +67,9 @@ class Comment {
 			$body = <<<EOT
 Witaj $to_name,
 
-U¿ytkownik $author wyedytowa³ komentarz do Twojego zdjêcia "$photo_title".
+Uytkownik $author wyedytowa komentarz do Twojego zdjï¿½ia "$photo_title".
 
-Obecna tre¶æ komentarza:
+Obecna treï¿½komentarza:
 
 $title
 
@@ -78,16 +77,16 @@ $text
 
 ----
 
-Poprzednia tre¶æ komentarza:
+Poprzednia treï¿½komentarza:
 
 $o_title
 
 $o_text
 
 -- 
-Ten email zosta³ wys³any automatycznie. Prosimy nie odpowiadaæ.
+Ten email zosta wysany automatycznie. Prosimy nie odpowiadaï¿½
 EOT;
-			Utils::mail("Komentarz do Twojego zdjêcia \"$photo_title\" zosta³ zmieniony.", $body, $photo->_user->user_email, $photo->_user->user_name);
+			Utils::mail("Komentarz do Twojego zdjï¿½ia \"$photo_title\" zosta zmieniony.", $body, $photo->_user->user_email, $photo->_user->user_name);
 		}
 
 		if ($this->_dbo->user_id != $session->_uid) {
@@ -100,9 +99,9 @@ EOT;
 			$body = <<<EOT
 Witaj $to_name,
 
-U¿ytkownik $author wyedytowa³ Twój komentarz do zdjêcia "$photo_title".
+Uytkownik $author wyedytowa Twï¿½ komentarz do zdjï¿½ia "$photo_title".
 
-Obecna tre¶æ komentarza:
+Obecna treï¿½komentarza:
 
 $title
 
@@ -110,16 +109,16 @@ $text
 
 ----
 
-Poprzednia tre¶æ komentarza:
+Poprzednia treï¿½komentarza:
 
 $o_title
 
 $o_text
 
 -- 
-Ten email zosta³ wys³any automatycznie. Prosimy nie odpowiadaæ.
+Ten email zosta wysany automatycznie. Prosimy nie odpowiadaï¿½
 EOT;
-			Utils::mail("Twój komentarz do zdjêcia \"$photo_title\" zosta³ zmieniony.", $body, $this->_user->user_email, $this->_user->user_name);
+			Utils::mail("Twï¿½ komentarz do zdjï¿½ia \"$photo_title\" zosta zmieniony.", $body, $this->_user->user_email, $this->_user->user_name);
 		}
 
 	
@@ -129,7 +128,7 @@ EOT;
 		global $db;
 
 		if ($checkperm && !Permissions::checkPermAndLevel('delete_comments', $this->_dbo->user_id))
-			throw new Exception2("Nie mo¿na usun±æ komentarza", "Brak uprawnieñ.");
+			throw new Exception2("Nie mona usunï¿½komentarza", "Brak uprawnieï¿½");
 
 		$q = $db->prepare("DELETE FROM phph_comments WHERE comment_id = ?");
 		$db->execute($q, array($this->_cmid));

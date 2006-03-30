@@ -2,9 +2,9 @@
 // $Id$
 
 require_once('Smarty/Smarty.class.php');
-require_once('config.php');
+require_once('includes/Config.php');
 
-class Phph_Smarty extends Smarty {
+class PhphSmarty extends Smarty {
 
 	function __construct($action) {
 
