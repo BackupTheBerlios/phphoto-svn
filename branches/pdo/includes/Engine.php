@@ -21,39 +21,46 @@ class Engine {
 	protected $_db;
 	protected $_supported = array();
 	protected $_valid = false;
+	protected $_main_template;
+	protected $_template_vars = array();
+	protected $_messages = array();
 
 	function __construct($action) {
-	
+
 		if (!$this->supported($action)) {
 			$this->_valid = false;
 			return;
 		}
 
+		$this->_template_vars = array();
+
 		$this->_url = Config::get("site_url");
+		//$this->_ref = Utils::secureHeaderData($_SERVER['HTTP_REFERER']);
 		$this->_ref = Utils::secureHeaderData(Utils::pg("ref"));
 		$this->_page = Utils::pg("p", 0);
 		$this->_count = Utils::pg("c", 20);
 		$this->_action = $action;
-		
+		$this->_main_template = "index.tpl";
+
 		$this->_session = Session::singletone();
-		
+
 		$this->_smarty = new PhphSmarty($this->_action);
-		$this->_smarty->assign('ref', $this->_ref);
-		$this->_smarty->assign('self', Utils::selfURL());
-		$this->_smarty->assign('action', $this->_action);
-		$this->_smarty->assign('page', $this->_page);
-		$this->_smarty->assign('count', $this->_count);
-		
+
+		$this->setTemplateVar('ref', $this->_ref);
+		$this->setTemplateVar('self', Utils::selfURL());
+		$this->setTemplateVar('action', $this->_action);
+		$this->setTemplateVar('page', $this->_page);
+		$this->setTemplateVar('count', $this->_count);
 		$this->_templates = array();	// action => template, default: action => action.tpl
 		$this->_actions = array();	// action => function, default: action => $this->_action()
 
 		$this->_db = Database::singletone()->db();
-	
+
 		if (!empty($this->_templates[$this->_action]))
 			$this->_template = $this->_templates[$this->_action];
 		else
 			$this->_template = $this->_action . ".tpl";
-		
+
 		if (!empty($this->_actions[$this->_action]))
 			$this->_action_fn = $this->_actions[$this->_action];
 		else
@@ -61,7 +68,8 @@ class Engine {
 
 		$this->_smarty->register_function('url', 'smarty_url');
 		$this->_smarty->register_function('full_url', 'smarty_full_url');
-	
+		$this->_smarty->register_function('decode_ip', 'smarty_decode_ip');
+
 		$this->_valid = true;
 /*
 		$this->_templates = array(
@@ -78,13 +86,51 @@ class Engine {
 		);
 */
 	}
-	
+
+	function setTemplateVar($name, $val) {
+		$this->_template_vars[$name] = $val;
+	}
+
+	function addMessage($body, $title = "", $class = "normal", $trace_str = null, $trace = null) {
+		$msg = array();
+		$msg['body'] = $body;
+		$msg['title'] = $title;
+		$msg['class'] = $class;
+		if (!empty($trace_str) && Config::get("debug_trace", 0)) {
+			$msg['trace_available'] = 1;
+			$msg['trace_str'] = $trace_str;
+			$msg['trace'] = $trace;
+
+		}
+		$this->_messages[] = $msg;
+	}
+
 	function valid() {
 		return $this->_valid;
 	}
 
 	function supported($action) {
 		return array_search($action, $this->_supported) !== FALSE;
+	}
+
+	function smarty() {
+		return $this->_smarty;
+	}
+
+	function session() {
+		return $this->_session;
+	}
+
+	function page() {
+		return intval($this->_page);
+	}
+
+	function startItem() {
+		return $this->page() * $this->count();
+	}
+
+	function count() {
+		return intval($this->_count);
 	}
 
 	function url($action, $attrs = array(), $script = "index.php") {
@@ -94,9 +140,9 @@ class Engine {
 
 	function pager($url, $total) {
 		$n_pages = ceil($total / $this->_count);
-	
+
 		$pages = array();
-	
+
 		for ($i = 0; $i < $n_pages; $i++) {
 			$pages[] = array(
 				'index' => $i,
@@ -105,34 +151,52 @@ class Engine {
 				'current' => $this->_page == $i
 			);
 		}
-	
+
 		return $pages;
 	}
 
 	function call() {
 
 		try {
-		
+
 			if (!empty($this->_action_fn))
 				eval($this->_action_fn . "();");
-		
+
 		} catch (Exception $e) {
-			$this->_smarty->assign('error', 1);
-			$this->_smarty->assign('error_title', $e->getMessage());
+			$this->addMessage($e->getMessage(), "", "error", $e->getTraceAsString(), $e->getTrace());
 		}
-		
-		$this->_smarty->assign("template", $this->_template);
-		$this->_smarty->assign("base_service_url", $this->url("service", array(), "service.php"));
+
+		$this->setTemplateVar("template", $this->_template);
+		$this->setTemplateVar("base_service_url", $this->url("service", array(), "service.php"));
 
 	}
 
-	function output() {
+	function output($time_start) {
 		Utils::negotiateContentType();
+
+		if ($this->_session->logged()) {
+			$this->setTemplateVar("logged_in", 1);
+			$this->setTemplateVar("logged_user_login", $this->_session->getUser()->dbdata("user_login"));
+			$this->setTemplateVar("logged_user_name", $this->_session->getUser()->dbdata("user_name"));
+		} else {
+			$this->setTemplateVar("logged_in", 0);
+		}
+
+		$this->setTemplateVar("datetime_format", $this->session()->getUserSetting("datetime_format", "%Y-%m-%d %H:%M:%S"));
+		$this->setTemplateVar("time_format", $this->session()->getUserSetting("time_format", "%H:%M:%S"));
+		$this->setTemplateVar("date_format", $this->session()->getUserSetting("date_format", "%Y-%m-%d"));
+		$this->setTemplateVar('queries', Database::singletone()->db()->count());
+		foreach($this->_template_vars as $key => $val)
+			$this->smarty()->assign($key, $val);
+
+		$this->smarty()->assign("time_generated", sprintf("%.3f", microtime(true) - $time_start));
+		$this->smarty()->assign("messages", $this->_messages);
+		$this->smarty()->assign("messages_count", count($this->_messages));
 		ob_start();
-		$this->_smarty->display("index.tpl");
+		$this->_smarty->display($this->_main_template);
 		ob_flush();
 	}
-	
+
 	function baseURL() {
 		return $this->_url;
 	}
@@ -144,4 +208,8 @@ function smarty_url($params, &$smarty) {
 
 function smarty_full_url($params, &$smarty) {
 	return Config::get("site_url") . $params['path'];
+}
+
+function smarty_decode_ip($params, &$smarty) {
+	return Utils::decodeIP($params['ip']);
 }

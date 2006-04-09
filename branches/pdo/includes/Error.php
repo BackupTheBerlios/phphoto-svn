@@ -8,8 +8,11 @@ class Error extends Engine {
 
 	function __construct($action) {
 		parent::__construct("error");
+		if ($this->valid()) {
+			$this->_main_template = "error/index.tpl";
+		}
 	}
-	
+
 	function supported($action) {
 		return true;
 	}

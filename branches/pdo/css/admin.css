@@ -1,0 +1,228 @@
+body {
+	font-family: Verdana, Arial, Sans-Serif;
+	font-size: 0.9em;
+	margin-top: 0;
+}
+
+div#topbar {
+	text-align: right;
+	width: 100%;
+	padding-top: 0.6em;
+	padding-bottom: 0.6em;
+}
+
+div#wrapper {
+	width: 100%;
+}
+
+div#content {
+	border: 1px dotted gray;
+	padding: 0;
+	background: #fafafa;
+	float: right;
+	width: 84%;
+	margin: 0;
+	font-size: 0.8em;
+}
+
+div#footer {
+	font-size: 0.7em;
+	text-align:center;
+	color: gray;
+	margin: 0.5em;
+}
+
+div#messages div.error {
+	border: 2px solid red;
+	background: #ffc9c0;
+	margin: 1em;
+	padding: 0.5em;
+	color: #c40000;
+}
+
+div#messages div.error div.trace {
+	font-size: 0.8em;
+	margin-top: 1.6em;
+}
+
+div#messages div.normal {
+	border: 2px solid green;
+        background-color: #d1ebdc;
+	margin: 1em;
+	padding: 0.5em;
+        color: #348754;
+}
+
+div.pager {
+	margin: 1em;
+}
+
+h1 {
+	font-size: 1em;
+	font-weight: bold;
+	margin-left: 1em;
+	margin-right: 1em;
+	font-style: italic;
+	border: 1px solid gray;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	padding-top: 0.2em;
+	padding-bottom: 0.2em;
+}
+
+/*
+ * ----------------------------------------------------------------------
+ * Menu
+ * ----------------------------------------------------------------------
+ */
+
+#menu {
+	float: left;
+	list-style: none;
+	padding: 0.5em;
+	padding-top: 0;
+	padding-right: 0;
+	margin: 0;
+	width: 14%;
+}
+
+#menu ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	font-size: 0.8em;
+	font-weight: normal;
+}
+
+#menu li.menu {
+	margin-bottom: 1em;
+	border: 1px gray dotted;
+	padding: 0.5em;
+	background: #eee;
+	font-weight: bold;
+	font-size: 0.9em;
+}
+
+#menu li.menu ul li {
+}
+
+#menu li.menu ul li.hover {
+	background-color: #ddd;
+}
+
+#menu li.menu:last-child {
+	margin-bottom: 0;
+}
+
+#menu li.menu ul li a {
+	text-decoration: none;
+	color: #333;
+	display: block;
+	width: 100%;
+}
+
+#menu li.menu ul li.hover a {
+	text-decoration: none;
+	color: #000;
+}
+
+/*
+ * ----------------------------------------------------------------------
+ * Form
+ * ----------------------------------------------------------------------
+ */
+
+form {
+	margin: 1em;
+}
+
+form fieldset {
+	margin: 0;
+	margin-bottom: 0.5em;
+	background: #fafafa;
+	border: 1px solid gray;
+}
+
+form fieldset.hover {
+	margin: 0;
+	background: #fefefe;
+	margin-bottom: 0.5em;
+	border: 1px solid black;
+}
+
+form fieldset legend {
+	color: black;
+}
+
+form div {
+	overflow: hidden;
+/*	background-color:0;*/
+	margin: 0.5em;
+	margin-bottom: 0.5em;
+	margin-top: 0.5em;
+	clear: both;
+}
+
+label {
+	width: 12em;
+	display: block;
+	float: left;
+}
+
+input, select {
+	display: block;
+	float: left;
+	margin-right: 0.5em;
+}
+
+/*
+ * ----------------------------------------------------------------------
+ * Tables
+ * ----------------------------------------------------------------------
+ */
+
+div.table {
+	margin: 1em;
+}
+
+table {
+	width: 100%;
+	/*margin: 1em;*/
+}
+
+td {
+	padding: 2px;
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+td img {
+	border: none;
+	padding: 0;
+}
+
+td.icon {
+	text-align: center;
+	padding: 1px;
+}
+
+td .details, th .details {
+	font-size: 0.7em;
+	color: gray;
+}
+
+th {
+	background-color: #ddd;
+}
+
+tr.odd {
+	background-color: #eee;
+}
+
+tr.even {
+	background-color: #fafafa;
+}
+
+tr.hilight {
+	background-color: #dceeff; /*#ccffcc;*/
+}

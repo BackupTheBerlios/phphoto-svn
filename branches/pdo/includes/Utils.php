@@ -30,32 +30,32 @@ class Utils {
 
 	static function gp($var, $def = null) {
 		if (isset($_GET[$var]))
-			return strip_tags(urldecode($_GET[$var]));
+			return urldecode($_GET[$var]);
 		elseif (isset($_POST[$var]))
-			return strip_tags($_POST[$var]);
+			return $_POST[$var];
 		else
 			return $def;
 	}
-	
+
 	static function pg($var, $def = null) {
 		if (isset($_POST[$var]))
-			return strip_tags($_POST[$var]);
+			return $_POST[$var];
 		elseif (isset($_GET[$var]))
-			return strip_tags(urldecode($_GET[$var]));
+			return urldecode($_GET[$var]);
 		else
 			return $def;
 	}
-	
+
 	static function p($var, $def = null) {
 		if (isset($_POST[$var]))
-			return strip_tags($_POST[$var]);
+			return $_POST[$var];
 		else
 			return $def;
 	}
 
 	static function g($var, $def = null) {
 		if (isset($_GET[$var]))
-			return strip_tags(urldecode($_GET[$var]));
+			return urldecode($_GET[$var]);
 		else
 			return $def;
 	}
@@ -63,19 +63,19 @@ class Utils {
 	static function selfURL() {
 		return "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 	}
-	
+
 	static function url($action, $attrs = array(), $script = "index.php") {
-	
+
 		$s = Config::get("site_url") . "/$script?action=$action";
 		$s = Session::singletone()->addSID($s);
 		$ref = self::pg("ref");
 		if (!empty($ref))
 			$s .= "&amp;ref=" . htmlspecialchars(urlencode($ref));
-	
+
 		foreach ($attrs as $id => $val) {
 			$s .= htmlspecialchars("&$id=" . urlencode($val));
 		}
-	
+
 		return $s;
 	}
 
@@ -108,7 +108,7 @@ class Utils {
 	static function formatTime($time, $format = "%Y-%m-%d %T") {
 		return strftime($format, $time);
 	}
-	
+
 	static function formatDate($time, $format = "%Y-%m-%d") {
 		return Utils::formatTime($time, $format);
 	}
@@ -170,7 +170,7 @@ class Utils {
 			'html_encoding' => $html_encoding
 		));
 		$headers = $mime->headers($headers);
-	
+
 		$rcpt = $to;
 		$mail->send($rcpt, $headers, $body);
 	}

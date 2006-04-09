@@ -10,7 +10,7 @@ define('SESSION_METHOD_COOKIE', 1);
 define('ANON_USER', 0);
 
 class Session {
-	
+
 	private static $_session = null;
 	var $_user = null;
 	var $_method = SESSION_METHOD_GET;
@@ -18,7 +18,7 @@ class Session {
 	var $_uid = ANON_USER;
 
 	private function __construct() {
-		
+
 		$db = Database::singletone()->db();
 
 		$expire_time = time() - Config::get("session_lifetime", 3600);
@@ -93,7 +93,7 @@ class Session {
 			$sth->bindValue(":session_ip", Utils::getEncodedClientIP());
 			$sth->execute();
 			$sth = null;
-	
+
 		} else {
 
 			$sth = $db->prepare(
@@ -124,7 +124,7 @@ class Session {
 			$sth->bindValue(":session_ip", Utils::getEncodedClientIP());
 			$sth->execute();
 			$sth = null;
-			
+
 		} else {
 
 			$sth = $db->prepare(
@@ -147,9 +147,27 @@ class Session {
 		$c_path = Config::get("cookie_path");
 		$sid_name = Session::getSIDCookieName();
 		$uid_name = Session::getUIDCookieName();
-		
+
 		setcookie($sid_name, $this->_sid, time() + 31536000, $c_path, $c_domain);
 		setcookie($uid_name, $this->_uid, time() + 31536000, $c_path, $c_domain);	// expire in 1 year
+	}
+
+	public function logout() {
+		$db = Database::singletone()->db();
+
+		if ($this->uid() == ANON_USER)
+			return;
+
+		$sth = $db->prepare("DELETE FROM phph_sessions WHERE session_id = :sid");
+		$sth->bindParam(":sid", $this->_sid);
+		$sth->execute();
+
+		$this->_user = null;
+		$this->_method = SESSION_METHOD_GET;
+		$this->_sid = '';
+		$this->_uid = ANON_USER;
+
+		$this->newSession();
 	}
 
 	public static function getSIDCookieName() {
@@ -192,6 +210,10 @@ class Session {
 	}
 
 	public function getUser() {
+		return $this->user();
+	}
+
+	public function user() {
 		if ($this->_uid == ANON_USER)
 			return null;
 		if ($this->_user == null) {
@@ -207,6 +229,65 @@ class Session {
 	public function uid() {
 		return $this->_uid;
 	}
+
+	public function logged() {
+		return $this->_uid != ANON_USER;
+	}
+
+	function getUserSetting($name, $def, $glob = true) {
+		return Config::getUser($this->_uid, $name, $def, $glob);
+	}
+
+	function setUserSetting($name, $val) {
+		Config::setUser($this->_uid, $name, $val);
+	}
+
+	function isAdmin() {
+		if ($this->isAnon())
+			return false;
+		return $this->getUser()->isAdmin();
+	}
+
+	function isAnon() {
+		return $this->uid() == ANON_USER;
+	}
+
+	function checkLevel($uid) {
+		if ($this->isAnon())
+			return false;
+
+		return $this->user()->checkLevel($uid);
+	}
+
+	function checkLevelVal($level) {
+		if ($this->isAnon())
+			return false;
+
+		return $this->user()->checkLevelVal($level);
+	}
+
+	function checkPerm($perm) {
+		if ($this->isAnon())
+			return false;
+
+		return $this->user()->checkPerm($perm);
+	}
+
+	function checkPermAndLevel($perm, $uid) {
+		if ($this->isAnon())
+			return false;
+
+		return $this->user()->checkPermAndLevel($perm, $uid);
+	}
+
+	function checkPermAndLevelVal($perm, $level) {
+		if ($this->isAnon())
+			return false;
+
+		return $this->user()->checkPermAndLevelVal($perm, $level);
+	}
+
+
 }
 
 Session::create();

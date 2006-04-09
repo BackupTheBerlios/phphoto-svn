@@ -6,8 +6,25 @@ require_once("includes/Phphoto.php");
 require_once("includes/Admin.php");
 require_once("includes/Error.php");
 
+$time_start = microtime(true);
+
+if (get_magic_quotes_gpc()) {
+	function stripslashes_deep($value) {
+		$value = is_array($value) ?
+		array_map('stripslashes_deep', $value) :
+		stripslashes($value);
+
+		return $value;
+	}
+
+	$_POST = array_map('stripslashes_deep', $_POST);
+	$_GET = array_map('stripslashes_deep', $_GET);
+	$_COOKIE = array_map('stripslashes_deep', $_COOKIE);
+}
+
+
 //function get_photo($pid, $cid) {
-//	
+//
 //	$photo = new Photo($pid);
 //	$data = $photo->get(100, 100);
 //
@@ -33,6 +50,6 @@ if (!$engine->valid())
 	$engine = new Error($action);	// Page not found. Give up.
 
 $engine->call();
-$engine->output();
+$engine->output($time_start);
 
 ?>
