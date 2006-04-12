@@ -182,11 +182,13 @@ input, select {
  */
 
 div.table {
-	margin: 1em;
+	/*margin: 1em;*/
+	/*padding: 1em;*/
 }
 
 table {
 	width: 100%;
+	font-size: 1em;
 	/*margin: 1em;*/
 }
 

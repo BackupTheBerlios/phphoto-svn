@@ -11,16 +11,23 @@ require_once("includes/Utils.php");
 class Admin extends Engine {
 
 	function __construct($action) {
-		$this->_supported = array("admin", "adm-sitecfg", "adm-usercfg", "adm-users");
+		$this->_supported = array("admin", "adm-sitecfg", "adm-usercfg", "adm-users", 'adm-edit-user');
 		parent::__construct($action);
-		if (!$this->session()->checkPerm("admin_panel"))
+		if (!$this->valid())
+			return;
+		if (!$this->session()->checkPerm("admin_panel")) {
 			$this->_valid = false;
-		if ($this->valid()) {
-			$this->_main_template = "admin/index.tpl";
-			$this->smarty()->assign("admin_panel", 1);
+			$this->_status_code = 403;
 		}
+		if (!$this->valid())
+			return;
 
+		$this->_main_template = "admin/index.tpl";
+		$this->setTemplateVar("admin_panel", 1);
+		$this->setTemplateVar("sub", Utils::pg("sub", ""));
 		$this->_action_fn = str_replace("_adm-", "_", $this->_action_fn);
+		$this->_action_fn = str_replace("-", "_", $this->_action_fn);
+		$this->_action_fn = str_replace("_>", "->", $this->_action_fn);
 		$this->_template = str_replace("adm-", "", $this->_template);
 	}
 
@@ -130,6 +137,10 @@ class Admin extends Engine {
 		$this->setTemplateVar('pager', $pages);
 
 		$this->setTemplateVar("users", $rows);
+	}
+
+	protected function _edit_user() {
+		$this->setTemplateVar("user_id", Utils::pg("uid"));
 	}
 }
 

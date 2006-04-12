@@ -36,31 +36,31 @@
 	</td>
 	<td class="icon">
 		{if $user.allow_edit}
-			<img src="{full_url path="/images/edit.gif"}" alt="Edycja" />
+			<a href="{url action="adm-edit-user" uid=$user.user_id}"><img src="{full_url path="/images/icons/edit-orange.gif"}" alt="Edycja" /></a>
 		{/if}
 	</td>
 	<td class="icon">
 		{if $user.allow_perms}
-			<img src="{full_url path="/images/flag.gif"}" alt="Uprawnienia" />
+			<!--<img src="{full_url path="/images/flag.gif"}" alt="Uprawnienia" />-->
 		{/if}
 	</td>
 	<td class="icon">
 		{if $user.allow_delete}
-			<img src="{full_url path="/images/trash.gif"}" alt="Usuń" />
+			<img src="{full_url path="/images/icons/remove-user-red.gif"}" alt="Usuń" />
 		{/if}
 	</td>
 	<td class="icon">
 		{if $user.user_email}
-			<img src="{full_url path="/images/email.gif"}" alt="Email" />
+			<img src="{full_url path="/images/icons/email-orange.gif"}" alt="Email" />
 		{/if}
 	</td>
 	<td class="icon">
 		{if $user.user_www}
-			<a class="external" href="{$user.user_www|escape}"><img src="{full_url path="/images/www.gif"}" alt="Strona domowa" /></a>
+			<a class="external" href="{$user.user_www|escape}"><img src="{full_url path="/images/icons/home-icon3.gif"}" alt="Strona domowa" /></a>
 		{/if}
 	</td>
 	<td class="icon">
-		<img src="{full_url path="/images/photo.gif"}" alt="Zdjęcia" />
+		<!--<img src="{full_url path="/images/photo.gif"}" alt="Zdjęcia" />-->
 	</td>
 </tr>
 {/foreach}

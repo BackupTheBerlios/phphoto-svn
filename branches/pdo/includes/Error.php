@@ -6,10 +6,14 @@ require_once("includes/Engine.php");
 
 class Error extends Engine {
 
-	function __construct($action) {
+	private $_error_code;
+
+	function __construct($action, $code) {
 		parent::__construct("error");
 		if ($this->valid()) {
 			$this->_main_template = "error/index.tpl";
+			$this->_error_code = $code;
+			$this->_template = $code . ".tpl";
 		}
 	}
 
@@ -22,7 +26,6 @@ class Error extends Engine {
 	}
 
 	protected function _error() {
-		$this->_template = "404.tpl";
 	}
 }
 

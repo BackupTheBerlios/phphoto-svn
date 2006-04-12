@@ -21,6 +21,7 @@ class Engine {
 	protected $_db;
 	protected $_supported = array();
 	protected $_valid = false;
+	protected $_status_code = 200;
 	protected $_main_template;
 	protected $_template_vars = array();
 	protected $_messages = array();
@@ -29,6 +30,7 @@ class Engine {
 
 		if (!$this->supported($action)) {
 			$this->_valid = false;
+			$this->_status_code = 404;
 			return;
 		}
 
@@ -107,6 +109,10 @@ class Engine {
 
 	function valid() {
 		return $this->_valid;
+	}
+
+	function statusCode() {
+		return $this->_status_code;
 	}
 
 	function supported($action) {
@@ -203,7 +209,9 @@ class Engine {
 }
 
 function smarty_url($params, &$smarty) {
-	return Utils::url($params['action']);
+	$action = $params['action'];
+	unset($params['action']);
+	return Utils::url($action, $params);
 }
 
 function smarty_full_url($params, &$smarty) {

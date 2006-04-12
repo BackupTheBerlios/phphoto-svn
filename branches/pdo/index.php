@@ -43,11 +43,12 @@ if (get_magic_quotes_gpc()) {
 
 $action = Utils::pg("action", "start");
 
-$engine = new Phphoto($action);
-if (!$engine->valid())
+if ($action == "admin" || strpos($action, 'adm-') === 0)
 	$engine = new Admin($action);	// Try route to admin module
+else
+	$engine = new Phphoto($action);
 if (!$engine->valid())
-	$engine = new Error($action);	// Page not found. Give up.
+	$engine = new Error($action, $engine->statusCode());	// Page not found. Give up.
 
 $engine->call();
 $engine->output($time_start);
