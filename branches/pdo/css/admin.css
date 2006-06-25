@@ -1,7 +1,17 @@
+body, p, div, h1, h2, h3, h4, h5, h6, h7, span, a, form, table, tr, td, th, ul, ol, dl, li, dt, dd,
+label, input, select, textarea, fieldset, legend, img {
+	margin: 0;
+	padding: 0;
+}
+
+a {
+	text-decoration: none;
+}
+
 body {
 	font-family: Verdana, Arial, Sans-Serif;
 	font-size: 0.9em;
-	margin-top: 0;
+	margin: 0 1em;
 }
 
 div#topbar {
@@ -17,12 +27,11 @@ div#wrapper {
 
 div#content {
 	border: 1px dotted gray;
-	padding: 0;
 	background: #fafafa;
 	float: right;
-	width: 84%;
-	margin: 0;
+	width: 85%;
 	font-size: 0.8em;
+	padding-top: 1em;
 }
 
 div#footer {
@@ -60,14 +69,22 @@ div.pager {
 h1 {
 	font-size: 1em;
 	font-weight: bold;
-	margin-left: 1em;
-	margin-right: 1em;
+	margin: 0 1em;
 	font-style: italic;
 	border: 1px solid gray;
-	padding-left: 0.5em;
-	padding-right: 0.5em;
-	padding-top: 0.2em;
-	padding-bottom: 0.2em;
+	padding: 0.2em 0.5em;
+}
+
+.ajaxstatus {
+	color: #999;
+	font-size: 0.8em;
+	margin: 4px;
+}
+
+.ajaxerror {
+	color: red;
+	font-size: 0.8em;
+	margin: 4px;
 }
 
 /*
@@ -79,17 +96,11 @@ h1 {
 #menu {
 	float: left;
 	list-style: none;
-	padding: 0.5em;
-	padding-top: 0;
-	padding-right: 0;
-	margin: 0;
 	width: 14%;
 }
 
 #menu ul {
 	list-style: none;
-	padding: 0;
-	margin: 0;
 	font-size: 0.8em;
 	font-weight: normal;
 }
@@ -119,6 +130,7 @@ h1 {
 	color: #333;
 	display: block;
 	width: 100%;
+	outline: none;
 }
 
 #menu li.menu ul li.hover a {
@@ -137,14 +149,13 @@ form {
 }
 
 form fieldset {
-	margin: 0;
 	margin-bottom: 0.5em;
 	background: #fafafa;
 	border: 1px solid gray;
+	padding: 0.5em;
 }
 
 form fieldset.hover {
-	margin: 0;
 	background: #fefefe;
 	margin-bottom: 0.5em;
 	border: 1px solid black;
@@ -158,21 +169,19 @@ form div {
 	overflow: hidden;
 /*	background-color:0;*/
 	margin: 0.5em;
-	margin-bottom: 0.5em;
-	margin-top: 0.5em;
 	clear: both;
 }
 
 label {
-	width: 12em;
+	width: 20em;
 	display: block;
 	float: left;
 }
 
-input, select {
+input, select, textarea {
 	display: block;
 	float: left;
-	margin-right: 0.5em;
+	margin: 0 0.5em;
 }
 
 /*
@@ -182,30 +191,33 @@ input, select {
  */
 
 div.table {
-	/*margin: 1em;*/
+	margin: 1em;
 	/*padding: 1em;*/
 }
 
 table {
 	width: 100%;
 	font-size: 1em;
+	border: none;
 	/*margin: 1em;*/
 }
 
 td {
-	padding: 2px;
-	padding-left: 4px;
-	padding-right: 4px;
+	padding: 2px 4px;
 }
 
 td img {
 	border: none;
-	padding: 0;
 }
 
 td.icon {
 	text-align: center;
 	padding: 1px;
+	width: 28px;
+}
+
+td.icon a {
+	outline: none;
 }
 
 td .details, th .details {
@@ -214,6 +226,7 @@ td .details, th .details {
 }
 
 th {
+	padding: 2px;
 	background-color: #ddd;
 }
 
@@ -227,4 +240,68 @@ tr.even {
 
 tr.hilight {
 	background-color: #dceeff; /*#ccffcc;*/
+}
+
+/** Details table **/
+
+table table {
+	width: 100%;
+	font-size: 0.8em;
+	border: none;
+	/*margin: 1em;*/
+}
+
+table table th {
+	background-color: #eee;
+}
+
+table form {
+	display: block;
+	font-size: 0.8em;
+	margin: 4px;
+	float: none;
+}
+
+table label {
+	display: inline;
+	color: red;
+	width: auto;
+	float: none;
+}
+
+table input, table select, table textarea {
+	vertical-align: middle;
+	display: inline;
+	padding: 2px;
+	font-size: 1em;
+	border: 1px solid #ddd;
+	color: #999;
+	margin: 0 0.5em 0.5em 0;
+	float: none;
+}
+
+/*
+ * ----------------------------------------------------------------------
+ * Buttons
+ * ----------------------------------------------------------------------
+ */
+
+div.buttons {
+	margin: 1em;
+}
+
+div.buttons a {
+	outline: none;
+}
+
+div.buttons a.button img {
+	border: 1px solid gray;
+	padding: 0.5em;
+	background: #eee;
+}
+
+div.buttons a.button_hl img {
+	border: 1px solid black;
+	padding: 0.5em;
+	background: #ddd;
 }

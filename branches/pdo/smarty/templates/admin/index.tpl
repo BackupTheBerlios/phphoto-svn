@@ -1,6 +1,5 @@
 {* Smarty *}
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+{include file="doctype.tpl"}
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pl">
 {* $Id$ *}
 
@@ -12,11 +11,8 @@
 	<meta name="robots" content="noindex, nofollow" />
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<link href="{full_url path="/css/admin.css"}" rel="stylesheet" media="screen" type="text/css" />
-	<script type="text/javascript" charset="utf-8">
-		// <![CDATA[
-		var _ajax_service_base_url = "{$base_service_url}";
-		// ]]>
-	</script>
+	{include file="js-config.tpl"}
+	<script type="text/javascript" src="{full_url path="/js/functions.js"}"></script>
 	<script type="text/javascript" src="{full_url path="/js/behaviour.js"}"></script>
 	<script type="text/javascript" src="{full_url path="/js/advajax.js"}"></script>
 	<script type="text/javascript" src="{full_url path="/js/ajax.js"}"></script>
@@ -40,15 +36,15 @@
 		<ul>
 			<li><a href="{url action="adm-usercfg"}">Ustawienia</a></li>
 			<li><a href="{url action="adm-users"}">Użytkownicy</a></li>
-			<li>Grupy</li>
+			<li><a href="{url action="adm-groups"}">Grupy</a></li>
 			<li>Wiadomość masowa</li>
 		</ul>
 	</li>
 	<li class="menu">Galeria
 		<ul>
-			<li>Ustawienia</li>
+			<li><a href="{url action="adm-galcfg"}">Ustawienia</a></li>
 			<li>Galerie</li>
-			<li>Kategorie</li>
+			<li><a href="{url action="adm-categories"}">Kategorie</a></li>
 			<li>Zdjęcia</li>
 		</ul>
 	</li>
@@ -57,7 +53,7 @@
 <div id="content">
 
 {include file="message.tpl"}
-{include file=admin/$template}
+{if $template}{include file=admin/$template}{/if}
 {include file="footer.tpl"}
 
 </div>

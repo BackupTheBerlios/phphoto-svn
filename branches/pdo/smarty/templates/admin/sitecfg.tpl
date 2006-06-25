@@ -100,6 +100,16 @@
 			</select>
 			<img src="{full_url path="/images/help2.gif"}" alt="Pomoc" title="Włącz pokazywanie stosu wywołań przy wyjątkach (nie zalecane)" />
 		</div>
+
+		<div class="select">
+			<label for="ajax_http_method">Metoda HTTP dla wywołań AJAX</label>
+			<select id="ajax_http_method" name="ajax_http_method">
+				<option value="POST" {if $frm_ajax_http_method == "POST"}selected="selected"{/if}>POST</option>
+				<option value="GET" {if $frm_ajax_http_method == "GET"}selected="selected"{/if}>GET</option>
+			</select>
+			<img src="{full_url path="/images/help2.gif"}" alt="Pomoc" title="Metoda jaką mają być wysyłane żądania AJAX (zalecane POST)." />
+		</div>
+
 	</fieldset>
 
 	<div class="buttons">

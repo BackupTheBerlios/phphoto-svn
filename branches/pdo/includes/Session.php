@@ -21,6 +21,8 @@ class Session {
 
 		$db = Database::singletone()->db();
 
+		session_start();
+
 		$expire_time = time() - Config::get("session_lifetime", 3600);
 		$sq = $db->prepare("DELETE FROM phph_sessions WHERE session_time < ?");
 		$sq->bindParam(1, $expire_time);

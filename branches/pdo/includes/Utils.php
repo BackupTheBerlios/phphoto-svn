@@ -68,9 +68,9 @@ class Utils {
 
 		$s = Config::get("site_url") . "/$script?action=$action";
 		$s = Session::singletone()->addSID($s);
-		$ref = self::pg("ref");
-		if (!empty($ref))
-			$s .= "&amp;ref=" . htmlspecialchars(urlencode($ref));
+		//$ref = self::pg("ref");
+		//if (!empty($ref))
+		//	$s .= "&amp;ref=" . htmlspecialchars(urlencode($ref));
 
 		foreach ($attrs as $id => $val) {
 			$s .= htmlspecialchars("&$id=" . urlencode($val));

@@ -24,7 +24,7 @@ class Engine {
 	protected $_status_code = 200;
 	protected $_main_template;
 	protected $_template_vars = array();
-	protected $_messages = array();
+	static $_time_start = 0;
 
 	function __construct($action) {
 
@@ -49,10 +49,13 @@ class Engine {
 		$this->_smarty = new PhphSmarty($this->_action);
 
 		$this->setTemplateVar('ref', $this->_ref);
+		$this->setTemplateVar('base_url', $this->_url);
+		$this->setTemplateVar('ajax_http_method', Config::get('ajax-http-method', 'POST'));
 		$this->setTemplateVar('self', Utils::selfURL());
 		$this->setTemplateVar('action', $this->_action);
 		$this->setTemplateVar('page', $this->_page);
 		$this->setTemplateVar('count', $this->_count);
+		$this->setTemplateVar('is_superuser', $this->session()->isAdmin());
 		$this->_templates = array();	// action => template, default: action => action.tpl
 		$this->_actions = array();	// action => function, default: action => $this->_action()
 
@@ -104,7 +107,7 @@ class Engine {
 			$msg['trace'] = $trace;
 
 		}
-		$this->_messages[] = $msg;
+		$_SESSION['messages'][] = $msg;
 	}
 
 	function valid() {
@@ -179,6 +182,9 @@ class Engine {
 
 	function output($time_start) {
 		Utils::negotiateContentType();
+		if (ereg("MSIE", $_SERVER['HTTP_USER_AGENT'])) {
+			$this->setTemplateVar("is_ie", 1);
+		}
 
 		if ($this->_session->logged()) {
 			$this->setTemplateVar("logged_in", 1);
@@ -196,11 +202,17 @@ class Engine {
 			$this->smarty()->assign($key, $val);
 
 		$this->smarty()->assign("time_generated", sprintf("%.3f", microtime(true) - $time_start));
-		$this->smarty()->assign("messages", $this->_messages);
-		$this->smarty()->assign("messages_count", count($this->_messages));
-		ob_start();
+		if (isset($_SESSION['messages'])) {
+			$this->smarty()->assign("messages", $_SESSION['messages']);
+			$this->smarty()->assign("messages_count", count($_SESSION['messages']));
+		} else {
+			$this->smarty()->assign("messages_count", 0);
+		}
+		self::$_time_start = $time_start;
+		ob_start('ob_statistics');
 		$this->_smarty->display($this->_main_template);
 		ob_flush();
+		$_SESSION['messages'] = array();
 	}
 
 	function baseURL() {
@@ -220,4 +232,10 @@ function smarty_full_url($params, &$smarty) {
 
 function smarty_decode_ip($params, &$smarty) {
 	return Utils::decodeIP($params['ip']);
+}
+
+function ob_statistics($content) {
+	$content = str_replace('<queries>', Database::singletone()->db()->count(), $content);
+	$content = str_replace('<time_generated>', sprintf("%.3f", microtime(true) - Engine::$_time_start), $content);
+	return $content;
 }

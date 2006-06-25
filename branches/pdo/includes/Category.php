@@ -3,36 +3,107 @@
 
 require_once("includes/Database.php");
 require_once("includes/Config.php");
+require_once("includes/Session.php");
 require_once("includes/Utils.php");
 
 define('CATEGORY_NOT_FOUND', 1);
 define('CATEGORY_PARENT_NOT_FOUND', 2);
 
 class Category {
-	
-	var $_cid = 0;
-	var $_dbo;
-	
+
+	private $_cid = 0;
+	private $_dbdata = array();
+	private $_orig_dbdata = array();
 
 	function __construct($cid = 0) {
-		global $db;
-
 		$this->_cid = $cid;
-
-		if ($this->_cid != 0) {
-		
-			$this->_dbo = DB_DataObject::Factory("phph_categories");
-			if (PEAR::isError($this->_dbo))
-				throw new Exception2("Bd wewn�rzny", $this->_dbo->getMessage());
-			$r = $this->_dbo->get($cid);
-			if (PEAR::isError($r))
-				throw new Exception2("Bd wewn�rzny", $r->getMessage());
-			if ($r == 0)
-				throw new Exception2("Bd", "Kategoria nie istnieje", CATEGORY_NOT_FOUND);
-		}
-
+		$this->updateDBData();
 	}
 
+	function cid() {
+		return $this->_cid;
+	}
+
+	private function updateDBData() {
+		if ($this->_cid > 0) {
+			$sth = Database::singletone()->db()->prepare("SELECT * FROM phph_categories WHERE category_id = :category_id");
+			$sth->bindParam(":category_id", $this->_cid);
+			$sth->execute();
+			if (!($this->_dbdata = $sth->fetch()))
+				throw new Exception(_T("Kategoria nie istnieje"));
+			$this->_orig_dbdata = $this->_dbdata;
+			$sth = null;
+		}
+	}
+
+	function dbdata($name, $def = '') {
+		if (array_key_exists($name, $this->_dbdata))
+			return $this->_dbdata[$name];
+		else
+			return $def;
+	}
+
+	function setDBData($name, $val) {
+		$this->_dbdata[$name] = $val;
+	}
+
+	function origDBData($name, $def = '') {
+		if (array_key_exists($name, $this->_orig_dbdata))
+			return $this->_orig_dbdata[$name];
+		else
+			return $def;
+	}
+
+	function save() {
+		$db = Database::singletone()->db();
+		$parent = $this->dbdata('category_parent', 0);
+		$o_parent = $this->origDBData('category_parent', 0);
+		if ($this->dbdata('category_name') != $this->origDBData('category_name') || $parent != $o_parent) {
+			if ($parent > 0) {
+				$sth = $db->prepare('SELECT COUNT(*) FROM phph_categories WHERE category_name = :category_name AND category_parent = :parent');
+				$sth->bindParam(':parent', $parent);
+			} else {
+				$sth = $db->prepare('SELECT COUNT(*) FROM phph_categories WHERE category_name = :category_name AND category_parent IS NULL');
+			}
+			$sth->bindValue(':category_name', $this->dbdata('category_name'));
+			$sth->execute();
+			$r = $sth->fetchColumn(0);
+			$sth = null;
+			if ($r > 0) {
+				throw new Exception(_T('Kategoria o tej nazwie już istnieje.'));
+			}
+		}
+
+		if ($this->cid() == 0) {
+			$sth = $db->prepare(
+				'INSERT INTO phph_categories '.
+				'(category_name, category_description, category_created, category_creator, category_parent) '.
+				'VALUES '.
+				'(:category_name, :category_description, :category_created, :category_creator, :category_parent)');
+			$sth->bindValue(':category_created', time());
+			$sth->bindValue(':category_creator', Session::singletone()->uid());
+		} else {
+			$sth = $db->prepare(
+				'UPDATE phph_categories SET '.
+				'category_name = :category_name, '.
+				'category_description = :category_description, '.
+				'category_parent = :category_parent '.
+				'WHERE category_id = :category_id');
+			$sth->bindValue(':category_id', $this->cid());
+		}
+		$sth->bindValue(":category_name", $this->dbdata('category_name'));
+		$sth->bindValue(":category_description", $this->dbdata('category_description'));
+		if (empty($parent))
+			$parent = null;
+		$sth->bindParam(":category_parent", $parent);
+		$sth->execute();
+		if ($this->cid() == 0)
+			$this->_cid = $db->lastInsertId();
+		$sth = null;
+		$this->updateDBData();
+	}
+
+/*
 	function getParentTree($self = true) {
 		global $db;
 
@@ -183,6 +254,7 @@ class Category {
 			$subs[$row['user_id']]['cids'][$row['category_id']]['category_name'] = $row['category_name'];
 		}
 	}
+*/
 }
 
 ?>

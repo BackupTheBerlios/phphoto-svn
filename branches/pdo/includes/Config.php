@@ -11,6 +11,8 @@ class Config {
 
 	static function getStatic($name, $def = "") {
 
+		$name = str_replace('_', '-', $name);
+
 		if (array_key_exists($name, self::$_cache)) {
 			return self::$_cache[$name];
 		} else {
@@ -32,6 +34,8 @@ class Config {
 	}
 
 	static function getUser($uid, $name, $def = "", $glob = true) {
+
+		$name = str_replace('_', '-', $name);
 
 		if ($uid > 0) {
 			if (array_key_exists($uid, self::$_user_cache) && array_key_exists($name, self::$_user_cache[$uid])) {
@@ -62,6 +66,9 @@ class Config {
 	}
 
 	static function set($name, $val) {
+
+		$name = str_replace('_', '-', $name);
+
 		$db = Database::singletone()->db();
 		$sth = $db->prepare("SELECT COUNT(*) AS cnt FROM phph_config WHERE config_name = :config_name");
 		$sth->bindParam(":config_name", $name, PDO::PARAM_STR);
@@ -80,6 +87,8 @@ class Config {
 	}
 
 	static function setUser($uid, $name, $val) {
+
+		$name = str_replace('_', '-', $name);
 
 		$db = Database::singletone()->db();
 

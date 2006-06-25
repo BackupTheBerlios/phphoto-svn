@@ -7,7 +7,7 @@ function registerCheckLogin(t) {
 		if (warn_p)
 			warn_p.removeChild(warn);
 	}
-	
+
 	xml = t.responseXML;
 	if (xml.getElementsByTagName("exists").length > 0) {
 		warn = document.createElement("span");
@@ -23,11 +23,11 @@ function registerCheckLogin(t) {
 }
 
 var Rules = {
-	'#register_form #user_login': function(element) {
+	'form#register_form #user_login': function(element) {
 		element.onblur = function() {
 			el = document.getElementById("user_login");
 			if (el) {
-				var serv = _ajax_service("checkloginexists", { login: el.value });
+				var serv = _ajax_service("check-login-exists", { login: el.value });
 				serv.onSuccess = registerCheckLogin;
 				advAJAX.get(serv);
 			}

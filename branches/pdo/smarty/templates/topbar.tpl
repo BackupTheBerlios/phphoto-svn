@@ -3,7 +3,7 @@
 
 <div id="topbar">
 {if $logged_in}
-Zalogowany jako <strong>{$logged_user_name|escape}</strong> |
+Zalogowany jako <strong>{$logged_user_login|escape}</strong> |
 {if !$admin_panel}
 <a href="{url action="admin"}">Admin</a> |
 {/if}

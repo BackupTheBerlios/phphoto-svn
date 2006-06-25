@@ -37,8 +37,32 @@
 
 		<div class="textarea">
 			<label for="activation_message">Wiadomość aktywacyjna</label>
-			<textarea id="activation_message" name="activation_message" rows="10" cols="70">{$frm_activation_message|escape}</textarea>
+			<textarea id="activation_message" name="activation_message" rows="5" cols="70">{$frm_activation_message|escape}</textarea>
 		</div>
+
+	</fieldset>
+
+	<fieldset>
+		<legend>Ustawienia domyślne</legend>
+
+		<div class="text">
+			<label for="default_user_title">Tytuł użytkownika</label>
+			<input type="text" name="default_user_title" id="default_user_title" value="{$frm_default_user_title}" size="30" />
+		</div>
+
+		{if $allow_userlevel}
+			<div class="text">
+				<label for="default_user_level">Poziom użytkownika</label>
+				<input type="text" name="default_user_level" id="default_user_level" value="{$frm_default_user_level}" size="10" />
+			</div>
+		{/if}
+
+		{if $allow_grouplevel}
+			<div class="text">
+				<label for="default_group_level">Poziom grupy</label>
+				<input type="text" name="default_group_level" id="default_group_level" value="{$frm_default_group_level}" size="10" />
+			</div>
+		{/if}
 
 	</fieldset>
 
