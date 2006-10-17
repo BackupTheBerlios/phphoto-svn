@@ -10,13 +10,8 @@
 	<meta name="Generator" content="vim, kwrite" />
 	<meta name="robots" content="noindex, nofollow" />
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<link href="{full_url path="/css/admin.css"}" rel="stylesheet" media="screen" type="text/css" />
+	{include file="links.tpl"}
 	{include file="js-config.tpl"}
-	<script type="text/javascript" src="{full_url path="/js/functions.js"}"></script>
-	<script type="text/javascript" src="{full_url path="/js/behaviour.js"}"></script>
-	<script type="text/javascript" src="{full_url path="/js/advajax.js"}"></script>
-	<script type="text/javascript" src="{full_url path="/js/ajax.js"}"></script>
-	<script type="text/javascript" src="{full_url path="/js/admin.js"}"></script>
 </head>
 
 <body>
@@ -45,7 +40,7 @@
 			<li><a href="{url action="adm-galcfg"}">Ustawienia</a></li>
 			<li>Galerie</li>
 			<li><a href="{url action="adm-categories"}">Kategorie</a></li>
-			<li>Zdjęcia</li>
+			<li><a href="{url action="adm-photos"}">Zdjęcia</a></li>
 		</ul>
 	</li>
 </ul>

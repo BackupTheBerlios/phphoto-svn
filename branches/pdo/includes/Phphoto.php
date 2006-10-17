@@ -14,8 +14,17 @@ require_once("Mail.php");
 class Phphoto extends Engine {
 
 	function __construct($action) {
-		$this->_supported = array("start", "login", "register", "logout", "activate");
+		$this->_supported = array(
+			"start",
+			"login",
+			"register",
+			"logout",
+			"activate",
+			"upload-form"
+		);
 		parent::__construct($action);
+
+		$this->addCSS('css/screen.css');
 	}
 
 	function call() {
@@ -26,6 +35,30 @@ class Phphoto extends Engine {
 	}
 
 	protected function _start() {
+	}
+
+	protected function _upload_form() {
+
+		$this->addScript("js/functions.js");
+		$this->addScript("js/behaviour.js");
+		$this->addScript("js/advajax.js");
+		$this->addScript("js/ajax.js");
+		$this->addScript("js/category-tree.js");
+		$this->addScript("js/upload-form.js");
+
+		$this->setTemplateVar('upload_action', $this->url('upload-form'));
+
+		if (!empty($_POST['submit'])) {
+
+			$cids = Utils::pg('cid');
+			if (!is_array($cids))
+				$cids = explode(',', $cids);
+
+			$photo = new Photo();
+			$photo->setDBData('photo_description', Utils::p('description'));
+			$photo->setDBData('photo_title', Utils::p('title'));
+			$photo->upload($_FILES['file'], $cids);
+		}
 	}
 
 	protected function _view() {

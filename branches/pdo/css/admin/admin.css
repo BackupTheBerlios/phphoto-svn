@@ -39,6 +39,7 @@ div#footer {
 	text-align:center;
 	color: gray;
 	margin: 0.5em;
+	clear: both;
 }
 
 div#messages div.error {
@@ -62,8 +63,9 @@ div#messages div.normal {
         color: #348754;
 }
 
-div.pager {
+div#pager {
 	margin: 1em;
+	clear: both;
 }
 
 h1 {
@@ -85,6 +87,23 @@ h1 {
 	color: red;
 	font-size: 0.8em;
 	margin: 4px;
+}
+
+.details {
+	color: gray;
+	font-size: 0.8em;
+}
+
+img.icon {
+	border: 0 none;
+}
+
+span.icons {
+	padding-left: 5px;
+}
+
+span.icons a {
+	outline: none;
 }
 
 /*
@@ -117,7 +136,7 @@ h1 {
 #menu li.menu ul li {
 }
 
-#menu li.menu ul li.hover {
+#menu li.menu ul li:hover {
 	background-color: #ddd;
 }
 
@@ -133,7 +152,7 @@ h1 {
 	outline: none;
 }
 
-#menu li.menu ul li.hover a {
+#menu li.menu ul li:hover a {
 	text-decoration: none;
 	color: #000;
 }
@@ -155,7 +174,7 @@ form fieldset {
 	padding: 0.5em;
 }
 
-form fieldset.hover {
+form fieldset:hover {
 	background: #fefefe;
 	margin-bottom: 0.5em;
 	border: 1px solid black;
@@ -182,6 +201,11 @@ input, select, textarea {
 	display: block;
 	float: left;
 	margin: 0 0.5em;
+	width: auto;
+}
+
+input.hidden {
+	margin: 0;
 }
 
 /*
@@ -238,7 +262,7 @@ tr.even {
 	background-color: #fafafa;
 }
 
-tr.hilight {
+tr.odd:hover, tr.even:hover {
 	background-color: #dceeff; /*#ccffcc;*/
 }
 
@@ -288,6 +312,7 @@ table input, table select, table textarea {
 
 div.buttons {
 	margin: 1em;
+	clear: both;
 }
 
 div.buttons a {
@@ -300,8 +325,34 @@ div.buttons a.button img {
 	background: #eee;
 }
 
-div.buttons a.button_hl img {
+div.buttons a.button:hover img {
 	border: 1px solid black;
 	padding: 0.5em;
 	background: #ddd;
+}
+
+/*
+ * ----------------------------------------------------------------------
+ * Tooltips
+ * ----------------------------------------------------------------------
+ */
+
+.tooltip {
+	font-size: 0.8em;
+	border: 1px solid black;
+	background-color: #fff;
+	padding: 3px;
+}
+
+/*
+ * ----------------------------------------------------------------------
+ * Left pane
+ * ----------------------------------------------------------------------
+ */
+#right-pane {
+	float: right;
+	width: 34%;
+	margin-right: 1em;
+	margin-bottom: 1em;
+	clear: right;
 }

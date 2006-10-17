@@ -1,0 +1,35 @@
+/*
+ * ----------------------------------------------------------------------
+ * Tab sheet
+ * ----------------------------------------------------------------------
+ */
+
+.tab-sheet {
+}
+
+.tabs-header {
+	clear: both;
+	padding: 0.2em 0;
+}
+
+.tabs-header > span {
+	padding: 0.2em;
+	border: 1px solid gray;
+	border-bottom: none;
+	cursor: pointer;
+}
+
+.tabs-header > span.selected {
+	background: #eee;
+	border-bottom: 1px solid #eee;
+}
+
+.tabs-header > span:hover {
+	text-decoration: underline;
+}
+
+.tab-page {
+	background-color: #eee;
+	border: 1px solid gray;
+}
+

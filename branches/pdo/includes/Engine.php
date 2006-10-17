@@ -9,8 +9,8 @@ class Engine {
 
 	protected $_url;
 	protected $_ref;
-	protected $_page;
-	protected $_count;
+	protected $_default_page;
+	protected $_default_count;
 	protected $_action;
 	protected $_session;
 	protected $_smarty;
@@ -24,6 +24,8 @@ class Engine {
 	protected $_status_code = 200;
 	protected $_main_template;
 	protected $_template_vars = array();
+	protected $_scripts = array();
+	protected $_links = array();
 	static $_time_start = 0;
 
 	function __construct($action) {
@@ -39,8 +41,6 @@ class Engine {
 		$this->_url = Config::get("site_url");
 		//$this->_ref = Utils::secureHeaderData($_SERVER['HTTP_REFERER']);
 		$this->_ref = Utils::secureHeaderData(Utils::pg("ref"));
-		$this->_page = Utils::pg("p", 0);
-		$this->_count = Utils::pg("c", 20);
 		$this->_action = $action;
 		$this->_main_template = "index.tpl";
 
@@ -53,11 +53,24 @@ class Engine {
 		$this->setTemplateVar('ajax_http_method', Config::get('ajax-http-method', 'POST'));
 		$this->setTemplateVar('self', Utils::selfURL());
 		$this->setTemplateVar('action', $this->_action);
-		$this->setTemplateVar('page', $this->_page);
-		$this->setTemplateVar('count', $this->_count);
 		$this->setTemplateVar('is_superuser', $this->session()->isAdmin());
 		$this->_templates = array();	// action => template, default: action => action.tpl
 		$this->_actions = array();	// action => function, default: action => $this->_action()
+
+		$this->_default_page = 0;
+		$this->_default_count = 20;
+
+		$args = array();
+		foreach ($_GET as $id => $val) {
+			$args[$id] = $val;
+		}
+		foreach ($_POST as $id => $val) {
+			$args[$id] = $val;
+		}
+		$this->setTemplateVar('_ARGS', $args);
+		$this->setTemplateVar('_POST', $_POST);
+		$this->setTemplateVar('_GET', $_GET);
+
 
 		$this->_db = Database::singletone()->db();
 
@@ -70,6 +83,8 @@ class Engine {
 			$this->_action_fn = $this->_actions[$this->_action];
 		else
 			$this->_action_fn = '$this->_' . $this->_action;
+		$this->_action_fn = str_replace("-", "_", $this->_action_fn);
+		$this->_action_fn = str_replace("_>", "->", $this->_action_fn);
 
 		$this->_smarty->register_function('url', 'smarty_url');
 		$this->_smarty->register_function('full_url', 'smarty_full_url');
@@ -110,6 +125,26 @@ class Engine {
 		$_SESSION['messages'][] = $msg;
 	}
 
+	function addScript($src, $type = "text/javascript", $rel = true) {
+		if ($rel) {
+			$src = Utils::fullURL($src);
+		}
+		$this->_scripts[] = array('src' => $src, 'type' => $type);
+	}
+
+	function addLink($attrs) {
+		$this->_links[] = $attrs;
+	}
+
+	function addCSS($href, $media = 'screen', $type = 'text/css', $attrs = array()) {
+		$arr = $attrs;
+		$arr['media'] = $media;
+		$arr['type'] = $type;
+		$arr['href'] = $href;
+		$arr['rel'] = 'stylesheet';
+		$this->addLink($arr);
+	}
+
 	function valid() {
 		return $this->_valid;
 	}
@@ -130,8 +165,16 @@ class Engine {
 		return $this->_session;
 	}
 
+	function setDefaultPage($page) {
+		$this->_default_page = $page;
+	}
+
+	function setDefaultCount($count) {
+		$this->_default_count = $count;
+	}
+
 	function page() {
-		return intval($this->_page);
+		return intval(Utils::pg("p", $this->_default_page));
 	}
 
 	function startItem() {
@@ -139,7 +182,7 @@ class Engine {
 	}
 
 	function count() {
-		return intval($this->_count);
+		return intval(Utils::pg("c", $this->_default_count));
 	}
 
 	function url($action, $attrs = array(), $script = "index.php") {
@@ -147,17 +190,25 @@ class Engine {
 	}
 
 
-	function pager($url, $total) {
-		$n_pages = ceil($total / $this->_count);
+	function pager($total) {
+		$n_pages = ceil($total / $this->count());
 
 		$pages = array();
+
+		$url = $this->url($this->_action);
+		$addattrs = '';
+		foreach ($_GET as $id => $val) {
+			if ($id != 'p' && $id != 'c' && $id != 'action')
+				$addattrs .= htmlspecialchars("&$id=" . urlencode($val));
+		}
+
 
 		for ($i = 0; $i < $n_pages; $i++) {
 			$pages[] = array(
 				'index' => $i,
 				'page' => $i + 1,
-				'url' => $url . "&amp;p=$i&amp;c=$this->_count",
-				'current' => $this->_page == $i
+				'url' => $url . $addattrs . "&amp;p=$i&amp;c=" . $this->count(),
+				'current' => $this->page() == $i
 			);
 		}
 
@@ -194,6 +245,8 @@ class Engine {
 			$this->setTemplateVar("logged_in", 0);
 		}
 
+		$this->setTemplateVar('page', $this->page());
+		$this->setTemplateVar('count', $this->count());
 		$this->setTemplateVar("datetime_format", $this->session()->getUserSetting("datetime_format", "%Y-%m-%d %H:%M:%S"));
 		$this->setTemplateVar("time_format", $this->session()->getUserSetting("time_format", "%H:%M:%S"));
 		$this->setTemplateVar("date_format", $this->session()->getUserSetting("date_format", "%Y-%m-%d"));
@@ -208,6 +261,8 @@ class Engine {
 		} else {
 			$this->smarty()->assign("messages_count", 0);
 		}
+		$this->smarty()->assign("_scripts", $this->_scripts);
+		$this->smarty()->assign("_links", $this->_links);
 		self::$_time_start = $time_start;
 		ob_start('ob_statistics');
 		$this->_smarty->display($this->_main_template);

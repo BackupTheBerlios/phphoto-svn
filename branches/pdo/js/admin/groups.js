@@ -1,26 +1,5 @@
 /* $Id$ */
 
-function ajaxIndicator(el) {
-	return domEl('img', '', { 'src': _base_url + '/images/indicators/indicator.gif', 'alt': 'Loading...', 'title': 'Loading...' }, el, 1);
-}
-
-function setAjaxStatus(msg, target, error) {
-	if (error)
-		target.className = 'ajaxerror';
-	else
-		target.className = 'ajaxstatus';
-
-	domEl('', msg, '', target, 1);
-}
-
-function handleAjaxError(t, target) {
-	service = xml.getElementsByTagName('service')[0];
-	error = service.getElementsByTagName('error')[0];
-	if (error.getElementsByTagName('exception').length > 0) {
-		setAjaxStatus(error.getElementsByTagName('exception')[0].firstChild.nodeValue, target, 1);
-	}
-}
-
 function updatedGroupMembersCount(t) {
 
 	gid = 0;
@@ -142,7 +121,7 @@ function getGroupMembers(t) {
 			allow_add != '1' ? '' : domEl('form', [
 				domEl('input', '', { 'type': 'text', 'id': 'member-login-' + group_id, 'name': 'member-login-' + group_id }),
 				domEl('input', '', { 'type': 'submit', 'id': 'member-login-add-' + group_id, 'name': 'member-login-add-' + group_id, 'value': 'Dodaj' }),
-			], { 'method': 'post', 'action': '#', 'onsubmit': 'addGroupMember(' + group_id + '); return false;',  }),
+			], { 'method': 'post', 'action': '#', 'onsubmit': 'addGroupMember(' + group_id + '); return false;'  }),
 			domEl('div', '', { 'id': 'member-status-' + group_id, 'class': 'ajaxstatus' })
 		], { 'colspan': '2' }),
 		domEl('td', '', {'colspan': '6' })
@@ -233,46 +212,6 @@ function addGroupMember(gid)
 }
 
 var Rules = {
-	'#menu li.menu ul li': function(element) {
-		element.onmouseover = function() {
-			element.className = "hover";
-		};
-		element.onmouseout = function() {
-			element.className = "";
-		};
-	},
-	'form fieldset': function(element) {
-		element.onmouseover = function() {
-			element.className = "hover";
-		};
-		element.onmouseout = function() {
-			element.className = "";
-		};
-	},
-	'tr.odd': function(element) {
-		element.onmouseover = function() {
-			element.className = "hilight";
-		};
-		element.onmouseout = function() {
-			element.className = "odd";
-		};
-	},
-	'tr.even': function(element) {
-		element.onmouseover = function() {
-			element.className = "hilight";
-		};
-		element.onmouseout = function() {
-			element.className = "even";
-		};
-	},
-	'div.buttons a.button' : function(element) {
-		element.onmouseover = function() {
-			element.className = "button_hl";
-		};
-		element.onmouseout = function() {
-			element.className = "button";
-		};
-	},
 	'table#groups-table td a.members-icon': function(element) {
 		element.onclick = function() {
 

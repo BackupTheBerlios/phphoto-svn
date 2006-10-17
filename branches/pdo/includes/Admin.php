@@ -27,7 +27,8 @@ class Admin extends Engine {
 			'adm-group-members',
 			'adm-galcfg',
 			'adm-categories',
-			'adm-edit-category'
+			'adm-edit-category',
+			'adm-photos'
 		);
 		parent::__construct($action);
 
@@ -44,10 +45,10 @@ class Admin extends Engine {
 		$this->_main_template = "admin/index.tpl";
 		$this->setTemplateVar("admin_panel", 1);
 		$this->setTemplateVar("sub", Utils::pg("sub", ""));
-		$this->_action_fn = str_replace("_adm-", "_", $this->_action_fn);
-		$this->_action_fn = str_replace("-", "_", $this->_action_fn);
-		$this->_action_fn = str_replace("_>", "->", $this->_action_fn);
+		$this->_action_fn = str_replace("_adm_", "_", $this->_action_fn);
 		$this->_template = str_replace("adm-", "", $this->_template);
+
+		$this->addCSS(Utils::fullURL("css/admin/admin.css"));
 	}
 
 	function call() {
@@ -87,6 +88,7 @@ class Admin extends Engine {
 		$session_lifetime = Utils::p("session_lifetime", Config::get("session-lifetime", 3600));
 		$email_from = Utils::p("email_from", Config::get("email-from"));
 		$email_user = Utils::p("email_user", Config::get("email-user"));
+		$email_signature = Utils::p("email_signature", Config::get("email-signature"));
 		$debug_trace = Utils::p("debug_trace", Config::get("debug-trace", 0));
 		$ajax_http_method = Utils::p("ajax_http_method", Config::get("ajax-http-method", 'POST'));
 		$datetime_format = Utils::p("datetime_format", Config::get("datetime-format", "%Y-%m-%d %H:%M:%S"));
@@ -102,6 +104,7 @@ class Admin extends Engine {
 		$this->setTemplateVar("frm_session_lifetime", $session_lifetime);
 		$this->setTemplateVar("frm_email_user", $email_user);
 		$this->setTemplateVar("frm_email_from", $email_from);
+		$this->setTemplateVar("frm_email_signature", $email_signature);
 		$this->setTemplateVar("frm_debug_trace", $debug_trace);
 		$this->setTemplateVar("frm_ajax_http_method", $ajax_http_method);
 		$this->setTemplateVar("frm_datetime_format", $datetime_format);
@@ -118,6 +121,7 @@ class Admin extends Engine {
 			Config::set("session-lifetime", $session_lifetime);
 			Config::set("email-from", $email_from);
 			Config::set("email-user", $email_user);
+			Config::set("email-signature", $email_signature);
 			Config::set("debug-trace", $debug_trace);
 			Config::set("ajax-http-method", $ajax_http_method);
 			Config::set("datetime-format", $datetime_format);
@@ -199,7 +203,7 @@ class Admin extends Engine {
 			$row['allow_delete'] = ($this->session()->uid() != $row['user_id'] && $this->session()->checkPermAndLevel('remove-users', $row['user_id']));
 		}
 
-		$pages = $this->pager($this->url('adm-users'), $users);
+		$pages = $this->pager($users);
 		$this->setTemplateVar('pager', $pages);
 
 		$this->setTemplateVar("users", $rows);
@@ -321,6 +325,7 @@ class Admin extends Engine {
 		$create_categories = Utils::p('create_categories', $obj->getPerm('create-categories'));
 		$edit_categories = Utils::p('edit_categories', $obj->getPerm('edit-categories'));
 		$remove_categories = Utils::p('remove_categories', $obj->getPerm('remove-categories'));
+		$approve_photos = Utils::p('approve_photos', $obj->getPerm('approve-photos'));
 
 
 		$this->setTemplateVar('frm_admin_panel', $admin_panel);
@@ -347,6 +352,7 @@ class Admin extends Engine {
 		$this->setTemplateVar('frm_edit_categories', $edit_categories);
 		$this->setTemplateVar('frm_create_categories', $create_categories);
 		$this->setTemplateVar('frm_remove_categories', $remove_categories);
+		$this->setTemplateVar('frm_approve_photos', $approve_photos);
 
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -374,6 +380,7 @@ class Admin extends Engine {
 			$obj->setPerm('create-categories', $create_categories);
 			$obj->setPerm('edit-categories', $edit_categories);
 			$obj->setPerm('remove-categories', $remove_categories);
+			$obj->setPerm('approve-photos', $approve_photos);
 
 			$this->finishAction(_T("Uprawnienia zostały zmodyfikowane."));
 		}
@@ -383,6 +390,12 @@ class Admin extends Engine {
 
 		if (!$this->session()->checkPerm("groups-list"))
 			$this->denyAccess();
+
+		$this->addScript("js/functions.js");
+		$this->addScript("js/behaviour.js");
+		$this->addScript("js/advajax.js");
+		$this->addScript("js/ajax.js");
+		$this->addScript("js/admin/groups.js");
 
 		$db = Database::singletone()->db();
 		$sth = $db->query("SELECT COUNT(*) FROM phph_groups");
@@ -411,7 +424,7 @@ class Admin extends Engine {
 				$row['user_count'] = '-';
 		}
 
-		$pages = $this->pager($this->url('adm-groups'), $groups);
+		$pages = $this->pager($groups);
 		$this->setTemplateVar('pager', $pages);
 
 		$this->setTemplateVar("groups", $rows);
@@ -493,7 +506,7 @@ class Admin extends Engine {
 				$row['user_count'] = '-';
 		}
 
-		$pages = $this->pager($this->url('adm-groups'), $groups);
+		$pages = $this->pager($groups);
 		$this->setTemplateVar('pager', $pages);
 
 		$this->setTemplateVar("groups", $rows);
@@ -508,20 +521,35 @@ class Admin extends Engine {
 		$max_width = Utils::p("max_width", Config::get("max-width", 640));
 		$max_height = Utils::p("max_height", Config::get("max-height", 600));
 		$auto_approve = Utils::p("auto_approve", Config::get("auto-approve", 0));
+		$moderator_note = Utils::p("moderator_note", Config::get("default-moderator-note", ''));
 		$cache_lifetime = Utils::p("cache_lifetime", Config::get("cache-lifetime", 7));
+		$send_approve_notify = Utils::p("send_approve_notify", Config::get("send-approve-notify", 0));
+		$approve_notify = Utils::p("approve_notify", Config::get("approve-notify", ''));
+		$send_reject_notify = Utils::p("send_reject_notify", Config::get("send-reject-notify", 0));
+		$reject_notify = Utils::p("reject_notify", Config::get("reject-notify", ''));
 
 		$this->setTemplateVar("frm_max_file_size", $max_file_size);
 		$this->setTemplateVar("frm_max_width", $max_width);
 		$this->setTemplateVar("frm_max_height", $max_height);
 		$this->setTemplateVar("frm_auto_approve", $auto_approve);
+		$this->setTemplateVar("frm_moderator_note", $moderator_note);
 		$this->setTemplateVar("frm_cache_lifetime", $cache_lifetime);
+		$this->setTemplateVar("frm_send_approve_notify", $send_approve_notify);
+		$this->setTemplateVar("frm_approve_notify", $approve_notify);
+		$this->setTemplateVar("frm_send_reject_notify", $send_reject_notify);
+		$this->setTemplateVar("frm_reject_notify", $reject_notify);
 
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 			Config::set("max-file-size", $max_file_size);
 			Config::set("max-width", $max_width);
 			Config::set("max-height", $max_height);
 			Config::set("auto-approve", $auto_approve);
+			Config::set("default-moderator-note", $moderator_note);
 			Config::set("cache-lifetime", $cache_lifetime);
+			Config::set("send-approve-notify", $send_approve_notify);
+			Config::set("approve-notify", $approve_notify);
+			Config::set("send-reject-notify", $send_reject_notify);
+			Config::set("reject-notify", $reject_notify);
 
 			$this->addMessage("Ustawienia zostały zapisane.");
 		}
@@ -532,18 +560,20 @@ class Admin extends Engine {
 		if (!$this->session()->checkPerm("categories-list"))
 			$this->denyAccess();
 
+		$this->addScript("js/functions.js");
+		$this->addScript("js/behaviour.js");
+		$this->addScript("js/advajax.js");
+		$this->addScript("js/ajax.js");
+		$this->addScript("js/domLib.js");
+		$this->addScript("js/domTT.js");
+		$this->addScript("js/admin/ctree.js");
+		$this->addScript("js/admin/categories.js");
+
+		$this->addCSS('css/admin/tabs.css');
+		$this->addCSS('css/admin/preview.css');
+		$this->addCSS('css/admin/ctree.css');
+
 		$db = Database::singletone()->db();
-
-		$sth = $db->prepare(
-			"SELECT c.* " .
-			"FROM phph_categories c ".
-			"WHERE c.category_parent IS NULL ".
-			"ORDER BY c.category_name ASC");
-		$sth->execute();
-		$rows = $sth->fetchAll();
-		$sth = null;
-
-		$this->setTemplateVar("categories", $rows);
 	}
 
 	protected function _edit_category() {
@@ -558,26 +588,190 @@ class Admin extends Engine {
 				$this->denyAccess();
 		}
 
+		$this->addScript("js/functions.js");
+		$this->addScript("js/behaviour.js");
+		$this->addScript("js/advajax.js");
+		$this->addScript("js/ajax.js");
+		$this->addScript("js/admin/ctree.js");
+		$this->addScript("js/admin/edit-category.js");
+
+		$this->addCSS('css/admin/ctree.css');
+
 		$category = new Category($category_id);
 
 		$category_name = Utils::p("category_name", $category->dbdata('category_name'));
 		$category_description = Utils::p("category_description", $category->dbdata('category_description'));
+		$category_parent = Utils::p("category_parent", $category->dbdata('category_parent', null));
 
 		$this->setTemplateVar('category_id', $category_id);
 		$this->setTemplateVar('frm_category_name', $category_name);
 		$this->setTemplateVar('frm_category_description', $category_description);
+		$this->setTemplateVar('frm_category_parent', $category_parent);
 
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 			$category->setDBData('category_name', $category_name);
 			$category->setDBData('category_description', $category_description);
+			$category->setDBData('category_parent', $category_parent);
 			$category->save();
 			$category_id = $category->cid();
 			$this->setTemplateVar('category_id', $category_id);
 			$this->finishAction(_T("Kategoria została zapisana."));
 		}
-
 	}
 
+	private function getPhotosWhereSql($addwhere = true) {
+
+		$uid = Utils::pg('uid', 0);
+		$cid = Utils::pg('cid', 0);
+		$scid = Utils::pg('scid', 0);
+		$approved = Utils::pg('approved', '');
+		$rejected = Utils::pg('rejected', '');
+		$waiting = Utils::pg('waiting', '');
+		$user_login = Utils::pg('user_login', '');
+
+		if (!empty($user_login)) {
+			$db = Database::singletone()->db();
+			$sth = $db->prepare('SELECT user_id FROM phph_users WHERE user_login = :login');
+			$sth->bindParam(':login', $user_login);
+			$sth->execute();
+			$row = $sth->fetch();
+			if ($row) {
+				$uid = $row['user_id'];
+			}
+		}
+
+		$sql = '';
+
+		if (!is_numeric($uid))
+			$uid = 0;
+		if (!is_numeric($cid))
+			$cid = 0;
+
+		if (!empty($approved) || !empty($rejected) || !empty($waiting)) {
+			$ssql = ' (0=1 ';
+			if (!empty($approved))
+				$ssql .= " OR pm.moderation_mode = 'approve'";
+			if (!empty($rejected))
+				$ssql .= " OR pm.moderation_mode = 'reject'";
+			if (!empty($waiting))
+				$ssql .= " OR p.moderation_id IS NULL";
+			$ssql .= ') ';
+			$sql .= (empty($sql) ? "" : " AND ") . $ssql;
+		}
+
+		if ($uid > 0)
+			$sql .= (empty($sql) ? "" : " AND ") . " p.user_id = $uid";
+		if ($cid > 0) {
+			if (!empty($scid)) {
+				$cids = array();
+				$cids = Category::getSubCategoriesCIDs($cid, true);
+				$cids[] = $cid;
+				$scids = implode(', ', $cids);
+				$sql .= (empty($sql) ? "" : " AND ") .
+					"p.photo_id IN (SELECT c.photo_id FROM phph_photos_categories c WHERE c.category_id IN ($scids))";
+			} else {
+				$sql .= (empty($sql) ? "" : " AND ") .
+					"p.photo_id IN (SELECT c.photo_id FROM phph_photos_categories c WHERE c.category_id = $cid)";
+			}
+		}
+		if ($addwhere) {
+			if (empty($sql))
+				$sql = 'WHERE 1=1 ';
+			else
+				$sql = 'WHERE ' . $sql;
+		}
+		return $sql;
+	}
+
+	protected function _photos() {
+
+		if (!$this->session()->checkPerm("photos-list"))
+			$this->denyAccess();
+
+		$this->addScript("js/functions.js");
+		$this->addScript("js/behaviour.js");
+		$this->addScript("js/advajax.js");
+		$this->addScript("js/ajax.js");
+		$this->addScript("js/tabs.js");
+		$this->addScript("js/ac.js");
+		$this->addScript("js/admin/ctree.js");
+		$this->addScript("js/admin/photos.js");
+
+		$this->addCSS('css/admin/ctree.css');
+		$this->addCSS('css/admin/tabs.css');
+		$this->addCSS('css/admin/ac.css');
+		$this->addCSS('css/admin/preview.css');
+		$this->addCSS('css/admin/photos.css');
+
+		$db = Database::singletone()->db();
+
+		$this->setDefaultCount(16);
+
+		$wq = $this->getPhotosWhereSql();
+
+		$sth = $db->query("SELECT COUNT(*) FROM phph_photos p LEFT OUTER JOIN phph_photos_moderation pm ON p.moderation_id = pm.moderation_id " . $wq);
+		$photos = $sth->fetchColumn(0);
+		$sth = null;
+
+		$sth = $db->prepare('SELECT p.photo_id FROM phph_photos p LEFT OUTER JOIN phph_photos_moderation pm ON p.moderation_id = pm.moderation_id ' . $wq . ' ORDER BY photo_added DESC LIMIT :p, :c');
+		$sth->bindValue(":p", $this->startItem());
+		$sth->bindValue(":c", $this->count());
+		$sth->execute();
+		$rows = $sth->fetchAll();
+		$sth = null;
+
+		$aphotos = array();
+		foreach ($rows as &$row) {
+			$photo = new Photo($row['photo_id']);
+			$ph = $photo->fullData();
+			$ph['file'] = $photo->get(100, 100);
+			$aphotos[] = $ph;
+		}
+		$this->setTemplateVar('photos', $aphotos);
+
+		$pages = $this->pager($photos);
+		$this->setTemplateVar('pager', $pages);
+
+		$stats = array();
+
+		$sth = $db->query('SELECT COUNT(*) FROM phph_photos p');
+		$stats['total']['total'] = $sth->fetchColumn(0);
+		$sth = null;
+		$sth = $db->query('SELECT COUNT(*) FROM phph_photos p LEFT OUTER JOIN phph_photos_moderation pm ON p.moderation_id = pm.moderation_id ' . $wq);
+		$stats['selected']['total'] = $sth->fetchColumn(0);
+		$sth = null;
+		$sth = $db->query('SELECT COUNT(*) FROM phph_photos p LEFT OUTER JOIN phph_photos_moderation pm ON p.moderation_id = pm.moderation_id '.
+				  "WHERE pm.moderation_mode = 'approve'");
+		$stats['total']['approved'] = $sth->fetchColumn(0);
+		$sth = null;
+		$sth = $db->query('SELECT COUNT(*) FROM phph_photos p LEFT OUTER JOIN phph_photos_moderation pm ON p.moderation_id = pm.moderation_id ' .
+				  $wq .
+			  	  " AND pm.moderation_mode = 'approve'");
+		$stats['selected']['approved'] = $sth->fetchColumn(0);
+		$sth = null;
+		$sth = $db->query('SELECT COUNT(*) FROM phph_photos p LEFT OUTER JOIN phph_photos_moderation pm ON p.moderation_id = pm.moderation_id '.
+				  "WHERE pm.moderation_mode = 'reject'");
+		$stats['total']['rejected'] = $sth->fetchColumn(0);
+		$sth = null;
+		$sth = $db->query('SELECT COUNT(*) FROM phph_photos p LEFT OUTER JOIN phph_photos_moderation pm ON p.moderation_id = pm.moderation_id ' .
+				  $wq .
+			  	  " AND pm.moderation_mode = 'reject'");
+		$stats['selected']['rejected'] = $sth->fetchColumn(0);
+		$sth = null;
+		$sth = $db->query('SELECT COUNT(*) FROM phph_photos p WHERE p.moderation_id IS NULL');
+		$stats['total']['waiting'] = $sth->fetchColumn(0);
+		$sth = null;
+		$sth = $db->query('SELECT COUNT(*) FROM phph_photos p LEFT OUTER JOIN phph_photos_moderation pm ON p.moderation_id = pm.moderation_id ' . $wq . ' AND p.moderation_id IS NULL');
+		$stats['selected']['waiting'] = $sth->fetchColumn(0);
+		$sth = null;
+
+		//$sth = $db
+
+		$this->setTemplateVar('stats', $stats);
+
+		//$this->setTemplateVar("users", $rows);
+
+	}
 
 }
 

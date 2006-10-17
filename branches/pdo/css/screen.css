@@ -1,3 +1,9 @@
+body, p, div, h1, h2, h3, h4, h5, h6, h7, span, a, form, table, tr, td, th, ul, ol, dl, li, dt, dd,
+label, input, select, textarea, fieldset, legend, img {
+	margin: 0;
+	padding: 0;
+}
+
 body {
 	font-size: 0.9em;
 	font-family: Verdana, Arial, Sans-Serif;
@@ -14,6 +20,7 @@ div#footer {
 	text-align:center;
 	color: gray;
 	margin: 0.5em;
+	clear: both;
 }
 
 div#messages div.error {
@@ -27,5 +34,63 @@ div#messages div.error {
 div#messages div.error div.trace {
 	font-size: 0.8em;
 	margin-top: 1.6em;
+}
+
+div#messages div.normal {
+	border: 2px solid green;
+        background-color: #d1ebdc;
+	margin: 1em;
+	padding: 0.5em;
+        color: #348754;
+}
+
+div#messages div.debug {
+	border: 2px solid #888;
+        background-color: #ddd;
+	margin: 1em;
+	padding: 0.5em;
+        color: #aaa;
+}
+
+/*
+ * ----------------------------------------------------------------------
+ * Tree
+ * ----------------------------------------------------------------------
+ */
+div.category-tree {
+	margin: 0 0 1em 1em;
+	padding-left: 0.5em;
+	float: left;
+	width: 60%;
+}
+
+ul.tree li {
+	cursor: default;
+	margin: 2px 0;
+	list-style-type: none;
+}
+
+ul.tree li img {
+	margin-right: 6px;
+}
+
+ul.tree li span.tree-item {
+}
+
+ul.tree li.selected>span.tree-item {
+	background-color: #ddd;
+}
+
+ul.tree li>span.tree-item:hover {
+	background-color: #dceeff;
+}
+
+ul.tree li.selected>span.tree-item:hover {
+	background-color: #bccedf;
+}
+
+ul.tree li>div {
+	margin: 0 0 0 15px;
+	padding: 0;
 }
 

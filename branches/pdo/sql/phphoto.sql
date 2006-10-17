@@ -95,14 +95,24 @@ create table if not exists phph_categories (
 create table if not exists phph_photos (
 	photo_id integer not null unique auto_increment,
 	user_id integer not null references phph_users(user_id),
+	moderation_id integer null references phph_moderation(moderation_id),
 	photo_title varchar(255),
 	photo_description text,
 	photo_added integer(11) not null,
-	photo_approved integer(11),
-	photo_approved_by integer references phph_users(user_id),
+	photo_approved bool not null default 0,
 	photo_width integer,
 	photo_height integer,
 	primary key(photo_id)
+) ENGINE=InnoDB;
+
+create table if not exists phph_photos_moderation (
+	moderation_id integer not null unique auto_increment,
+	photo_id integer not null references phph_photos(photo_id),
+	user_id integer not null references phph_users(user_id),
+	moderation_time integer(11) not null,
+	moderation_mode varchar(64) not null,
+	moderation_note text,
+	primary key(moderation_id)
 ) ENGINE=InnoDB;
 
 create table if not exists phph_photos_categories (
@@ -119,6 +129,8 @@ create table if not exists phph_files (
 	file_width integer,
 	file_height integer,
 	file_original bool not null default 0,
+	file_keep bool not null default 0,
+	file_options integer not null default 0,
 	primary key(file_id)
 ) ENGINE=InnoDB;
 

@@ -16,3 +16,26 @@ function _ajax_service(meth) {
 	return obj;
 }
 
+function ajaxIndicator(el) {
+	var img = '/images/indicators/indicator.gif';
+	if (arguments[1])
+		img = arguments[1];
+	return domEl('img', '', { 'src': _base_url + img, 'alt': 'Loading...', 'title': 'Loading...' }, el, 1);
+}
+
+function setAjaxStatus(msg, target, error) {
+	if (error)
+		target.className = 'ajaxerror';
+	else
+		target.className = 'ajaxstatus';
+
+	domEl('', msg, '', target, 1);
+}
+
+function handleAjaxError(t, target) {
+	service = xml.getElementsByTagName('service')[0];
+	error = service.getElementsByTagName('error')[0];
+	if (error.getElementsByTagName('exception').length > 0) {
+		setAjaxStatus(error.getElementsByTagName('exception')[0].firstChild.nodeValue, target, 1);
+	}
+}

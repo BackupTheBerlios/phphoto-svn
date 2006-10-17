@@ -57,6 +57,7 @@ class Database {
 		$this->_db = new PDOEx($cfg_db_dsn, $cfg_db_user, $cfg_db_pass);
 		$this->_db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$this->_db->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('PDOStatementEx', array($this->_db)));
+		$this->_db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, 1);
 	}
 
 	public static function create() {

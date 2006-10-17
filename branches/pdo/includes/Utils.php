@@ -79,6 +79,13 @@ class Utils {
 		return $s;
 	}
 
+	static function fullURL($file) {
+		$url = Config::get("site-url");
+		if ($url[strlen($url)-1] != '/' && $file[0] != '/')
+			$url .= '/';
+		return $url . $file;
+	}
+
 	static function secureHeaderData($data) {
 		$data = str_replace("\n", "", $data);
 		$data = str_replace("\r", "", $data);
@@ -123,16 +130,19 @@ class Utils {
 		 return $string;
 	}
 
-	function mb_mime_header($string, $encoding = null, $linefeed="\r\n") {
+	function mb_mime_header($string, $encoding = null, $linefeed="\r\n\t") {
 		if(!$encoding) $encoding = mb_internal_encoding();
 		$encoded = '';
 
 		while($length = mb_strlen($string)) {
 			$encoded .= "=?$encoding?B?"
-				. base64_encode(mb_substr($string,0,24,$encoding))
-				. "?=$linefeed";
+				. base64_encode(mb_substr($string,0,60,$encoding))
+				. "?=";
 
-			$string = mb_substr($string,24,$length,$encoding);
+			$string = mb_substr($string,60,$length,$encoding);
+			if (!empty($string))
+				$encoded .= $linefeed;
+
 		}
 
 		return $encoded;
@@ -149,14 +159,16 @@ class Utils {
 		else
 			$to = $to_email;
 
-		//$subject = self::mb_mime_header($subject, $head_charset);
+		$subject = self::mb_mime_header($subject, $head_charset);
 		$headers = array(
-			"From" => Config::get("email_user") . " <" . Config::get("email_from") . ">",
-			"Reply-To" => Config::get("email_from"),
-			"Return-Path" => Config::get("email_from"),
+			"From" => Config::get('email-user') . ' <' . Config::get('email-from') . '>',
+			"Reply-To" => Config::get('email-from'),
+			"Return-Path" => Config::get('email-from'),
 		);
 
-		$txt_body .= "\n\n-- \nEmail wysany automatycznie. Prosimy nie odpowiadać\n";
+		$sig = Config::get('email-signature', '');
+		if (!empty($sig))
+			$txt_body .= "\n\n-- \n" . $sig . "\n";
 		$mime->setTXTBody(Utils::linewrap($txt_body));
 		$mime->setSubject($subject);
 		if (!empty($html_body))

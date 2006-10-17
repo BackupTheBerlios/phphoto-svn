@@ -1,0 +1,41 @@
+/*
+ * ----------------------------------------------------------------------
+ * Tree
+ * ----------------------------------------------------------------------
+ */
+div.category-tree {
+	margin: 0 0 1em 1em;
+	padding-left: 0.5em;
+	float: left;
+	width: 60%
+}
+
+ul.tree li {
+	cursor: default;
+	margin: 2px 0;
+	list-style-type: none;
+}
+
+ul.tree li img {
+	margin-right: 6px;
+}
+
+ul.tree li span.tree-item {
+}
+
+ul.tree li.selected>span.tree-item {
+	background-color: #ddd;
+}
+
+ul.tree li>span.tree-item:hover {
+	background-color: #dceeff;
+}
+
+ul.tree li.selected>span.tree-item:hover {
+	background-color: #bccedf;
+}
+
+ul.tree li>div {
+	margin: 0 0 0 15px;
+	padding: 0;
+}

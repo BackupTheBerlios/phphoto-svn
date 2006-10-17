@@ -73,7 +73,9 @@
 		{/if}
 	</td>
 	<td class="icon">
-		<img src="{full_url path="/images/icons/camera.png"}" alt="Zdjęcia" width="16" height="16" />
+		<a href="{url action="adm-photos" user_login=$user.user_login}">
+			<img src="{full_url path="/images/icons/camera.png"}" alt="Zdjęcia" width="16" height="16" />
+		</a>
 	</td>
 </tr>
 {/foreach}

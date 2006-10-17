@@ -1,0 +1,29 @@
+/*
+ * ----------------------------------------------------------------------
+ * Auto-complete input
+ * ----------------------------------------------------------------------
+ */
+
+div.ac-list {
+	position: absolute;
+	border: 1px solid gray;
+	background-color: white;
+	margin: 0;
+	padding: 0.3em;
+}
+
+div.ac-list li {
+	cursor: default;
+	display: block;
+	width: 100%;
+}
+
+div.ac-list li.selected, div.ac-list li.selected:hover {
+	background-color: #316ac5;
+	color: white;
+}
+
+div.ac-list li:hover {
+	background-color: #dceeff;
+	color: black;
+}

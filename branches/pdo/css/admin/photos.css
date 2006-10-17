@@ -1,0 +1,54 @@
+div#photos {
+	margin-left: 1em;
+	margin-bottom: 1em;
+	float: left;
+	width: 60%;
+}
+
+div#photos .photo-block {
+	display: -moz-inline-box;
+	display: inline-block;
+	border: 1px solid gray;
+	margin-right: 0.5em;
+	margin-bottom: 1em;
+	padding: 0.5em;
+	background-color: #eee;
+	width: 130px;
+	text-align: center;
+}
+
+div#photos .photo-block:hover {
+	background-color: #fff;
+}
+
+div#photos .photo-block div {
+	display: block;
+	width: 130px;
+}
+
+div#photos .photo-block h1 {
+	text-align: left;
+	display: block;
+	border: none;
+	border-bottom: 1px solid gray;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	font-size: 0.9em;
+}
+
+div#photos .photo-block h2 {
+	text-align: left;
+	display: block;
+	border: none;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	font-size: 0.9em;
+	color: gray;
+	font-style: italic;
+}
+
+div#photos .photo-block img {
+	margin: 0.5em;
+}

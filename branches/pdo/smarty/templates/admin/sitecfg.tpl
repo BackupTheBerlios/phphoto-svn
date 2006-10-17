@@ -87,6 +87,11 @@
 			<img src="{full_url path="/images/help2.gif"}" alt="Pomoc" title="Nazwa użytkownika pod jaką będą wysyłane listy do użytkowników" />
 		</div>
 
+		<div class="textarea">
+			<label for="email_signature">Podpis dołączany do każdej wiadomości</label>
+			<textarea id="email_signature" name="email_signature" rows="2" cols="70">{$frm_email_signature|escape}</textarea>
+		</div>
+
 	</fieldset>
 
 	<fieldset>

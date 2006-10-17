@@ -5,6 +5,7 @@ require_once("includes/Database.php");
 require_once("includes/Config.php");
 require_once("includes/Session.php");
 require_once("includes/Utils.php");
+require_once("includes/User.php");
 
 define('CATEGORY_NOT_FOUND', 1);
 define('CATEGORY_PARENT_NOT_FOUND', 2);
@@ -14,6 +15,7 @@ class Category {
 	private $_cid = 0;
 	private $_dbdata = array();
 	private $_orig_dbdata = array();
+	private $_creator = null;
 
 	function __construct($cid = 0) {
 		$this->_cid = $cid;
@@ -54,6 +56,14 @@ class Category {
 			return $def;
 	}
 
+	function creator() {
+		if (is_object($this->_creator))
+			return $this->_creator;
+
+		$this->_creator = new User($this->dbdata('category_creator'));
+		return $this->_creator;
+	}
+
 	function save() {
 		$db = Database::singletone()->db();
 		$parent = $this->dbdata('category_parent', 0);
@@ -74,12 +84,25 @@ class Category {
 			}
 		}
 
+		if (($this->cid() == 0) || $parent != $o_parent) {
+			if ($parent > 0) {
+				$sth = $db->prepare("SELECT IFNULL(MAX(category_order), 0) AS ord FROM phph_categories WHERE category_parent = :parent");
+				$sth->bindParam(':parent', $parent);
+			} else {
+				$sth = $db->prepare("SELECT IFNULL(MAX(category_order), 0) AS ord FROM phph_categories WHERE category_parent IS NULL");
+			}
+			$sth->execute();
+			$this->setDBData('category_order', $sth->fetchColumn(0) + 1);
+			$sth = null;
+		}
+
 		if ($this->cid() == 0) {
+
 			$sth = $db->prepare(
 				'INSERT INTO phph_categories '.
-				'(category_name, category_description, category_created, category_creator, category_parent) '.
+				'(category_name, category_description, category_created, category_creator, category_parent, category_order) '.
 				'VALUES '.
-				'(:category_name, :category_description, :category_created, :category_creator, :category_parent)');
+				'(:category_name, :category_description, :category_created, :category_creator, :category_parent, :category_order)');
 			$sth->bindValue(':category_created', time());
 			$sth->bindValue(':category_creator', Session::singletone()->uid());
 		} else {
@@ -87,12 +110,14 @@ class Category {
 				'UPDATE phph_categories SET '.
 				'category_name = :category_name, '.
 				'category_description = :category_description, '.
+				'category_order = :category_order, '.
 				'category_parent = :category_parent '.
 				'WHERE category_id = :category_id');
 			$sth->bindValue(':category_id', $this->cid());
 		}
 		$sth->bindValue(":category_name", $this->dbdata('category_name'));
 		$sth->bindValue(":category_description", $this->dbdata('category_description'));
+		$sth->bindValue(":category_order", $this->dbdata('category_order'));
 		if (empty($parent))
 			$parent = null;
 		$sth->bindParam(":category_parent", $parent);
@@ -101,6 +126,254 @@ class Category {
 			$this->_cid = $db->lastInsertId();
 		$sth = null;
 		$this->updateDBData();
+	}
+
+	static function getSubCategoriesCIDs($cid, $deep = false) {
+
+		$db = Database::singletone()->db();
+
+		$sub = array();
+
+		if ($cid == 0) {
+			$sth = $db->prepare("SELECT category_id FROM phph_categories WHERE category_parent IS NULL");
+		} else {
+			$sth = $db->prepare("SELECT category_id FROM phph_categories WHERE category_parent = :cid");
+			$sth->bindParam(":cid", $cid);
+		}
+		$sth->execute();
+		while ($row = $sth->fetch()) {
+			$sub[] = $row['category_id'];
+		}
+		$sth = null;
+		if ($deep) {
+			$ssub = array();
+			for ($i = 0; $i < count($sub); $i++) {
+				$ssub = array_merge($ssub, self::getSubCategoriesCIDs($sub[$i], $deep));
+			}
+			$sub = array_merge($sub, $ssub);
+		}
+
+		return $sub;
+	}
+
+	static function getSubCategories($cid, $deep = false, $flat = false) {
+
+		$db = Database::singletone()->db();
+
+		$sub = array();
+
+		if ($cid == 0) {
+			$sth = $db->prepare("SELECT c.*, ".
+					    'cb.user_id AS createor_id, cb.user_login AS creator_login, cb.user_name AS creator_name, cb.user_title AS creator_title, '.
+					    "(SELECT COUNT(*) FROM phph_categories c2 WHERE c2.category_parent = c.category_id) AS subcategories_count ".
+					    "FROM phph_categories c ".
+					    "LEFT OUTER JOIN phph_users cb ON c.category_creator = cb.user_id ".
+					    "WHERE c.category_parent IS NULL ORDER BY c.category_order ASC");
+		} else {
+			$sth = $db->prepare("SELECT c.*, ".
+					    'cb.user_id AS createor_id, cb.user_login AS creator_login, cb.user_name AS creator_name, cb.user_title AS creator_title, '.
+					    "(SELECT COUNT(*) FROM phph_categories c2 WHERE c2.category_parent = c.category_id) AS subcategories_count ".
+					    "FROM phph_categories c ".
+					    "LEFT OUTER JOIN phph_users cb ON c.category_creator = cb.user_id ".
+					    "WHERE c.category_parent = :cid ORDER BY c.category_order ASC");
+			$sth->bindParam(":cid", $cid);
+		}
+		$sth->execute();
+		while ($row = $sth->fetch()) {
+			$sub[] = $row;
+		}
+		$sth = null;
+		if ($deep) {
+			$ssub = array();
+			for ($i = 0; $i < count($sub); $i++) {
+				$a = self::getSubCategories($sub[$i]['category_id'], $deep, $flat);
+				if ($flat)
+					$ssub = array_merge($ssub, $a);
+				else
+					$sub[$i]['subcategories'] = $a;
+			}
+			if ($flat)
+				$sub = array_merge($sub, $ssub);
+		}
+
+		return $sub;
+	}
+
+	static function getSubCategoriesCount($cid) {
+		$db = Database::singletone()->db();
+
+		$sub = array();
+
+		if ($cid == 0) {
+			$sth = $db->prepare("SELECT COUNT(*) FROM phph_categories WHERE category_parent IS NULL");
+		} else {
+			$sth = $db->prepare("SELECT COUNT(*) FROM phph_categories WHERE category_parent = :cid");
+			$sth->bindParam(":cid", $cid);
+		}
+		$sth->execute();
+		$sub_c = $sth->fetchColumn(0);
+		$sth = null;
+		return $sub_c;
+	}
+
+	static function getPhotosPIDs($cid, $deep, $order = 'photo_added DESC', $limit = 0) {
+		$db = Database::singletone()->db();
+
+		$pids = array();
+
+		$sth = $db->prepare("SELECT photo_id FROM phph_photos_categories WHERE category_id = :cid");
+		$sth->bindParam(":cid", $cid);
+		$sth->execute();
+		while ($row = $sth->fetch()) {
+			$pids[] = $row['photo_id'];
+		}
+		$sth = null;
+		if ($deep) {
+			$subc = self::getSubCategoriesCIDs($cid, true);
+			foreach ($subc as $sub) {
+				$pids = array_merge($pids, self::getPhotosPIDs($sub, false));
+			}
+		}
+
+		if (empty($pids))
+			return $pids;
+
+		sort($pids);
+		array_unique($pids);
+
+		$slm = '';
+		if ($limit > 0)
+			$slm = ' LIMIT 0, ' . intval($limit);
+
+		$pids_s = implode(', ', $pids);
+
+		$sth = $db->prepare('SELECT photo_id FROM phph_photos WHERE photo_id IN (' . $pids_s . ') ORDER BY ' . $order . $slm);
+		$sth->execute();
+		$pids = array();
+		while ($row = $sth->fetch()) {
+			$pids[] = $row['photo_id'];
+		}
+
+		return $pids;
+	}
+
+	static function getPhotosCount($cid, $deep) {
+		$db = Database::singletone()->db();
+
+		$cnt = 0;
+		if ($deep) {
+			$pids = self::getPhotosPIDs($cid, true);
+			$cnt = count($pids);
+		} else {
+			$sth = $db->prepare("SELECT COUNT(*) FROM phph_photos_categories WHERE category_id = :cid");
+			$sth->bindParam(":cid", $cid);
+			$sth->execute();
+			$cnt = $sth->fetchColumn(0);
+			$sth = null;
+		}
+		return $cnt;
+	}
+
+	static function getPhotosObjs($cid, $deep, $order = 'photo_added DESC', $limit = 0) {
+		$photos = array();
+		$pids = self::getPhotosPIDs($cid, $deep, $order, $limit);
+		foreach ($pids as $pid)
+			$photos[] = new Photo($pid);
+		return $photos;
+	}
+
+	function subCategoriesCIDs($deep) {
+		return self::getSubCategoriesCIDs($this->cid(), $deep);
+	}
+
+	function subCategories($deep, $flat = false) {
+		return self::getSubCategories($this->cid(), $deep, $flat);
+	}
+
+	function subCategoriesCount() {
+		return self::getSubCategoriesCount($this->cid());
+	}
+
+	function photosCount($deep) {
+		return self::getPhotosCount($this->cid(), $deep);
+	}
+
+	function photosPIDs($deep, $order = 'photo_added DESC', $limit = 0) {
+		return self::getPhotosPIDs($this->cid(), $deep);
+	}
+
+	function photosObjs($deep, $order = 'photo_added DESC', $limit = 0) {
+		return self::getPhotosObjes($this->cid(), $deep);
+	}
+
+	function fullName($sep = ' / ') {
+		$parents = $this->getParentsObjs();
+		$parents[] = $this;
+		$parents_n = array();
+		foreach ($parents as $p) {
+			$parents_n[] = $p->dbdata('category_name');
+		}
+		return implode($sep, $parents_n);
+	}
+
+	function moveCategory($dir) {
+
+		$cid = 0;
+		$db = Database::singletone()->db();
+		if ($dir == 1) {
+			if ($this->dbdata('category_parent', 0) > 0) {
+				$sth = $db->prepare("SELECT category_id, category_order FROM phph_categories WHERE category_parent = :parent AND category_order < :order ORDER BY category_order DESC LIMIT 0,1");
+				$sth->bindValue(':parent', $this->dbdata('category_parent'));
+			} else {
+				$sth = $db->prepare("SELECT category_id, category_order FROM phph_categories WHERE category_parent IS NULL AND category_order < :order ORDER BY category_order DESC LIMIT 0,1");
+			}
+		} elseif ($dir == -1) {
+			if ($this->dbdata('category_parent', 0) > 0) {
+				$sth = $db->prepare("SELECT category_id, category_order FROM phph_categories WHERE category_parent = :parent AND category_order > :order ORDER BY category_order ASC LIMIT 0,1");
+				$sth->bindValue(':parent', $this->dbdata('category_parent'));
+			} else {
+				$sth = $db->prepare("SELECT category_id, category_order FROM phph_categories WHERE category_parent IS NULL AND category_order > :order ORDER BY category_order ASC LIMIT 0,1");
+			}
+		} else {
+			return 0;
+		}
+		$sth->bindValue(':order', $this->dbdata('category_order'));
+		$sth->execute();
+		if ($row = $sth->fetch()) {
+			$cid = $row['category_id'];
+			$new_order = $row['category_order'];
+		}
+		$sth = null;
+		if ($cid > 0) {
+			$sth = $db->prepare('UPDATE phph_categories SET category_order = :order WHERE category_id = :cid');
+			$sth->bindValue(':order', $this->dbdata('category_order'));
+			$sth->bindValue(':cid', $cid);
+			$sth->execute();
+			$sth = null;
+			$this->setDBData('category_order', $new_order);
+			$this->save();
+		}
+		return $cid;
+	}
+
+	function getParents() {
+		$parents = array();
+		if ($this->dbdata('category_parent', 0) > 0) {
+			$parent = new Category($this->dbdata('category_parent'));
+			$parents = $parent->getParents();
+			$parents[] = $this->dbdata('category_parent');
+		}
+		return $parents;
+	}
+
+	function getParentsObjs() {
+		$parents = array();
+		if ($this->dbdata('category_parent', 0) > 0) {
+			$parent = new Category($this->dbdata('category_parent'));
+			$parents = $parent->getParentsObjs();
+			$parents[] = $parent;
+		}
+		return $parents;
 	}
 
 /*

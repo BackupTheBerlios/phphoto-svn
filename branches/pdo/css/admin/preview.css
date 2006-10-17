@@ -1,0 +1,141 @@
+/*
+ * ----------------------------------------------------------------------
+ * Preview
+ * ----------------------------------------------------------------------
+ */
+
+.preview {
+	border: 1px solid gray;
+	padding: 0.5em;
+	background-color: #eee;
+}
+
+.preview h1 {
+	border: none;
+	border-bottom: 1px solid gray;
+	margin: 0;
+	padding: 0;
+	font-size: 1.1em;
+}
+
+.preview h2 {
+	font-size: 0.9em;
+	font-weight: bold;
+	font-style: italic;
+	border-bottom: 1px solid gray;
+	margin-top: 1.5em;
+	clear: both;
+}
+
+.preview p {
+	font-size: 0.8em;
+	color: gray;
+	font-style: italic;
+	padding: 0.5em 0;
+}
+
+.preview .preview-info {
+	font-style: italic;
+	font-size: 0.8em;
+}
+
+.preview .preview-info tr, .preview .preview-info td {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+.preview .preview-info-title {
+	padding-right: 0.3em;
+	width: 60%;
+}
+
+#preview #preview-photos div.preview-photo {
+	float: left;
+	/*width: 100px;*/
+	margin: 0.5em;
+	/*border: 1px solid gray;*/
+	/*font-size: 0.7em;
+	font-style: italic;
+	color: gray;*/
+	/*padding: 0.5em;*/
+}
+
+#preview #preview-photos div.preview-photo img {
+	display: block;
+	margin: 0.2em auto;
+	clear: both;
+	border: none;
+}
+
+#photo-preview img.photo {
+	display: block;
+	margin: 1em auto;
+	clear: both;
+}
+
+.preview div.buttons {
+	margin: 0;
+	margin-top: 0.5em;
+}
+
+.preview div.buttons a {
+	padding-right: 0.2em;
+	cursor: pointer;
+}
+
+.tooltip div.preview-photo-tt {
+	max-width: 210px;
+}
+
+.tooltip .preview-photo-tt img {
+	display: block;
+	margin: 0.2em auto;
+	clear: both;
+}
+
+.tooltip .preview-photo-tt h1 {
+	border: none;
+	font-style: italic;
+	font-size: 1em;
+	font-weight: bold;
+	text-align: center;
+	padding: 0.2em;
+}
+
+.tooltip .preview-photo-tt h2 {
+	border: none;
+	font-style: italic;
+	font-size: 0.8em;
+	font-weight: normal;
+	text-align: center;
+	padding: 0.2em;
+}
+
+.tooltip .preview-photo-tt p {
+	font-size: 0.8em;
+	color: gray;
+	font-style: italic;
+	padding: 0.5em 0;
+}
+
+.preview form {
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.preview form input, .preview form label {
+	display: inline;
+	float: none;
+}
+
+.preview form input.hidden {
+	margin: 0;
+}
+
+.preview form div {
+	margin: 1em 0.5em;
+}
+
+.preview form div.tree {
+	margin-top: 0;
+}

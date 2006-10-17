@@ -1,5 +1,23 @@
 /* $Id$ */
 
+var KEY_TAB = 9;
+var KEY_ENTER = 13;
+var KEY_ESCAPE = 27;
+var KEY_UP = 38;
+var KEY_DOWN = 40;
+
+function url(action) {
+	var s = _base_url + '/index.php?action=' + encodeURIComponent(action);
+	if (arguments[1]) {
+		var opt = arguments[1];
+		for (var i in opt) {
+			s += "&" + encodeURIComponent(String(i)) + "=" + encodeURIComponent(String(opt[i]));
+		}
+	}
+	return s;
+}
+
+
 function $() {
 	var elements = new Array();
 	for (var i = 0; i < arguments.length; i++) {
@@ -52,4 +70,64 @@ function toggle(obj) {
 	} else {
 		el.style.display = '';
 	}
+}
+
+function getElementsByClass(searchClass,node,tag) {
+	var classElements = new Array();
+	if ( node == null )
+		node = document;
+	if ( tag == null )
+		tag = '*';
+	var els = node.getElementsByTagName(tag);
+	var elsLen = els.length;
+	var pattern = new RegExp('(^|\\s)'+searchClass+'(\\s|$)');
+	for (i = 0, j = 0; i < elsLen; i++) {
+		if ( pattern.test(els[i].className) ) {
+			classElements[j] = els[i];
+			j++;
+		}
+	}
+	return classElements;
+}
+
+function getElementValue(el, tag) {
+	var val = null;
+	if (arguments.length == 3)
+		val = arguments[2];
+
+	var ell = el.getElementsByTagName(tag);
+
+	if (ell.length > 0 && ell[0].firstChild && ell[0].firstChild.nodeType == Node.TEXT_NODE)
+		val = ell[0].firstChild.nodeValue;
+
+	return val;
+}
+
+function insertFirst(parent, node) {
+	parent.insertBefore(node, parent.firstChild);
+}
+
+function addEvent(elm, evType, fn, useCapture) {
+	if (elm.addEventListener) {
+		elm.addEventListener(evType, fn, useCapture);
+		return true;
+	} else if (elm.attachEvent) {
+		var r = elm.attachEvent('on' + evType, fn);
+		return r;
+	} else {
+		elm['on' + evType] = fn;
+	}
+}
+
+function getKeyCode(ev) {
+	if (ev) {
+		return ev.keyCode;
+	} else if (window.event) {
+		return window.event.keyCode;
+	}
+}
+
+function cancelEvent(e) {
+	if (window.event) window.event.returnValue = false
+	else e.preventDefault()
 }

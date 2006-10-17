@@ -58,6 +58,10 @@ class User {
 		$this->_dbdata[$name] = $val;
 	}
 
+	function fullData() {
+		return $this->_dbdata;
+	}
+
 	function save() {
 		$db = Database::singletone()->db();
 		if ($this->uid() == 0)
@@ -438,6 +442,15 @@ EOT;
 		if ($key === FALSE)
 			return;
 		unset($this->_groups[$key]);
+	}
+
+	function xml($xml, $name = 'user') {
+		$author = $xml->createElement($name);
+		$author->appendChild($xml->createElement('user-id', $this->dbdata('user_id')));
+		$author->appendChild($xml->createElement('user-name', $this->dbdata('user_name')));
+		$author->appendChild($xml->createElement('user-login', $this->dbdata('user_login')));
+		$author->appendChild($xml->createElement('user-title', $this->dbdata('user_title')));
+		return $author;
 	}
 }
 

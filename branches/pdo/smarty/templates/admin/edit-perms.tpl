@@ -214,6 +214,14 @@
 			</select>
 		</div>
 
+		<div class="select">
+			<label for="approve_photos">Moderacja zdjęć</label>
+			<select id="approve_photos" name="approve_photos">
+				<option value="1" {if $frm_approve_photos}selected="selected"{/if}>Tak</option>
+				<option value="0" {if !$frm_approve_photos}selected="selected"{/if}>Nie</option>
+			</select>
+		</div>
+
 	</fieldset>
 
 	<div class="buttons">
